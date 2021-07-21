@@ -1,12 +1,12 @@
-import { useEffect, useState, useContext, createContext } from "react";
+import { useEffect, useState, useContext, createContext, FC } from "react";
 import firebase from "../firebase/firebase";
-import FullLoader from "../components/FullLoader";
+import FullLoader from "../components/FullLoader/FullLoader";
 
 const AuthContext = createContext<{ user: firebase.User | null }>({
   user: null,
 });
 
-export const AuthProvider: React.FC = ({ children }) => {
+export const AuthProvider: FC = ({ children }) => {
   const [user, setUser] = useState<firebase.User | null>(null);
   const [loading, setLoading] = useState<Boolean>(true);
 

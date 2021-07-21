@@ -1,11 +1,11 @@
-import { FC } from 'react'
+import { FC } from 'react';
 
 const Login: FC = () => {
   return (
     <div>
-      login
+      login 
     </div>
   )
 }
 
-export default Login
+export default Login;
