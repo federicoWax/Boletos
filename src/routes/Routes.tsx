@@ -10,13 +10,14 @@ import Profile from '../views/profile/Profile';
 
 const Routes: FC = () => {
   const { user } = useAuth();
-  
+
   return (
     <Router>
       <Layout style={{ minHeight: '100vh' }}>
           { user && <LayoutComponent /> }
           <Layout className="site-layout">
             <Layout.Content style={{ margin: '0 16px' }}>
+              {window.location.pathname === "/login" && user && <Redirect to="/" />}
               {window.location.pathname !== "/login" && !user && <Redirect to="/login" />}
               <Switch>
                 <Route exact path="/" component={Home} />
