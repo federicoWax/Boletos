@@ -14,11 +14,10 @@ const Routes: FC = () => {
   return (
     <Router>
       <Layout style={{ minHeight: '100vh' }}>
-          { user && <LayoutComponent /> }
+          { <LayoutComponent /> }
           <Layout className="site-layout">
             <Layout.Content style={{ margin: '0 16px' }}>
               {window.location.pathname === "/login" && user && <Redirect to="/" />}
-              {window.location.pathname !== "/login" && !user && <Redirect to="/login" />}
               <Switch>
                 <Route exact path="/" component={Home} />
                 <Route exact path="/login" component={Login} />
@@ -32,4 +31,4 @@ const Routes: FC = () => {
   )
 }
 
-export default Routes
+export default Routes;

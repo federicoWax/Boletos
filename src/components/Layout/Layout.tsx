@@ -5,12 +5,16 @@ import {
 } from '@ant-design/icons';
 import { Link } from "react-router-dom";
 import firebase from '../../firebase/firebase';
+import { useAuth } from "../../context/AuthContext";
+import { MdDirectionsBoat } from 'react-icons/md';
+import { BiDoorOpen, BiLogIn } from 'react-icons/bi';
 
 const { Sider } = Layout;
 const { SubMenu } = Menu;
 
 const LayoutComponent: FC = () => {
   const [collapsed, setCollapsed] = useState<boolean | undefined>(true);
+  const { user } = useAuth();
 
   const onCollapse = (collapsed: boolean | undefined) => setCollapsed(collapsed);
   
@@ -20,19 +24,26 @@ const LayoutComponent: FC = () => {
     <Sider collapsible collapsed={collapsed} onCollapse={onCollapse}>
       <div className="logo" />
       <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline">
-        <SubMenu key="sub1" icon={<UserOutlined />} title="User">
-          <Menu.Item key="3" icon={<SettingOutlined />}>
-            <Link to="/perfil">Mi perfil</Link>
-          </Menu.Item>
-          <Menu.Item key="4" icon={<ArrowLeftOutlined />} onClick={signOut}>Cerrar sesión</Menu.Item>
-        </SubMenu>
-        <SubMenu key="sub2" icon={<TeamOutlined />} title="Team">
-          <Menu.Item key="6">Team 1</Menu.Item>
-          <Menu.Item key="8">Team 2</Menu.Item>
-        </SubMenu>
-        <Menu.Item key="9" icon={<FileOutlined />}>
-          Files
+        <Menu.Item key="3" icon={<MdDirectionsBoat />}>
+          Botes
         </Menu.Item>
+      {
+        user 
+        ?
+          <>
+          <SubMenu key="sub1" icon={<UserOutlined />} title="User">
+            <Menu.Item key="1" icon={<SettingOutlined />}>
+              <Link to="/perfil">Mi perfil</Link>
+            </Menu.Item>
+            <Menu.Item key="4" icon={<BiDoorOpen />} onClick={signOut}>Cerrar sesión</Menu.Item>
+          </SubMenu>
+          </>
+        :
+        <Menu.Item key="2" icon={<BiLogIn />}>
+          Login
+        </Menu.Item>
+      }
+       
       </Menu>
     </Sider>
   )

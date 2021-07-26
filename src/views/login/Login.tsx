@@ -2,14 +2,13 @@ import { ChangeEvent, FC, useState } from 'react';
 import { Form, Input, Button, Row, Col, message } from 'antd';
 import logoLogin from '../../assets/login.png';
 import firebase from '../../firebase/firebase';
-import { RouteComponentProps } from 'react-router-dom';
 
 interface Account {
   email: string;
   passowrd: string;
 }
 
-const Login : FC<RouteComponentProps> = ({history}) => {
+const Login : FC = () => {
   const [account, setAccount] = useState<Account>({email: "", passowrd: ""});
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -20,7 +19,6 @@ const Login : FC<RouteComponentProps> = ({history}) => {
       setLoading(true);
       
       await firebase.auth().signInWithEmailAndPassword(account.email, account.passowrd);
-      history.push("/");
     } catch (error) {
       console.log(error);
       message.error("Error, datos incorrectos.");
@@ -42,14 +40,14 @@ const Login : FC<RouteComponentProps> = ({history}) => {
             onFinish={onFinish}
           >
             <Form.Item
-              label="Email"
+              label="Correo"
               name="email"
               rules={[{ required: true, message: 'Favor de escribir el correo.' }]}
             >
               <Input value={account.email} onChange={(e: ChangeEvent<HTMLInputElement>) => setAccount({...account, email: e.target.value})} />
             </Form.Item>
             <Form.Item
-              label="Password"
+              label="Contraseña"
               name="password"
               rules={[{ required: true, message: 'Favor de escribir la contraseña.' }]}
             >
