@@ -4,14 +4,14 @@ import { UserOutlined } from '@ant-design/icons';
 import { useHistory, useLocation } from "react-router-dom";
 import firebase from '../../firebase/firebase';
 import { useAuth } from "../../context/AuthContext";
-import { MdAttachMoney, MdDirectionsBoat } from 'react-icons/md';
+import { MdAttachMoney } from 'react-icons/md';
 import { BiDoorOpen, BiLogIn } from 'react-icons/bi';
 
 const { Sider } = Layout;
 const { SubMenu } = Menu;
 
 const LayoutComponent: FC = () => {
-  const [collapsed, setCollapsed] = useState<boolean | undefined>(false);
+  const [collapsed, setCollapsed] = useState<boolean | undefined>(true);
   const { user } = useAuth();
   const location = useLocation()
   const history = useHistory();

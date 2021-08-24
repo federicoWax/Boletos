@@ -14,7 +14,7 @@ const privateRoutes: string[] = [
 
 const publicRoutes: string[] = [
   "/",
-  "login"
+  "/login"
 ]
 
 const Routes: FC = () => {
@@ -22,7 +22,7 @@ const Routes: FC = () => {
 
   return (
     <Router>
-      <Layout style={{ minHeight: '100vh' }}>
+      <Layout style={{ minHeight: '100vh', maxWidth: '100wh', overflow: "hidden"}}>
           <LayoutComponent />
           <Layout className="site-layout">
             <Layout.Content style={{ margin: '0 16px', padding: 30 }}>

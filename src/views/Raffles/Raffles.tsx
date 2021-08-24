@@ -1,45 +1,11 @@
 import { useEffect, useState } from "react";
 import { FC } from "react";
-import { Button, Spin, Typography } from 'antd';
+import { Button, Spin } from 'antd';
 import ServiceFirebase from "../../services/firebase";
-import firebase from "../../firebase/firebase";
 import { PlusOutlined } from '@ant-design/icons';
 import RafflesModal from './RafflesModal';
+import { Raffle } from "./interfaces";
 
-interface Promotions {
-  description: string,
-  discount: number
-}
-
-interface Ticket {
-  number: number,
-  buyer: string,
-  status: string
-}
-
-interface PaymentMethod {
-  typePayment: string,
-  description: string,
-  number: string
-}
-
-interface Image {
-  imageUrl: string,
-  imagePath: string,
-}
- 
-interface Raffle {
-  id: string;
-  name: string;
-  description: string;
-  finalDate: firebase.firestore.Timestamp,
-  prices: Promotions[],
-  tickets: Ticket[],
-  payments: PaymentMethod[],
-  images: Image[],
-  image: Image,
-  status: boolean
-}
 
 const Raffles: FC = () => {
   const [loading, setLoading] = useState<boolean>(true);

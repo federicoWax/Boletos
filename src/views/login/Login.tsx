@@ -46,19 +46,21 @@ const Login : FC = () => {
               name="email"
               rules={[{ required: true, message: 'Favor de escribir el correo.' }]}
             >
-              <Input value={account.email} onChange={(e: ChangeEvent<HTMLInputElement>) => setAccount({...account, email: e.target.value})} />
+              <Input value={account.email} onChange={(e) => setAccount({...account, email: e.target.value})} />
             </Form.Item>
             <Form.Item
               label="Contraseña"
               name="password"
               rules={[{ required: true, message: 'Favor de escribir la contraseña.' }]}
             >
-              <Input.Password value={account.passowrd} onChange={(e: ChangeEvent<HTMLInputElement>) => setAccount({...account, passowrd: e.target.value})} />
+              <Input.Password value={account.passowrd} onChange={(e) => setAccount({...account, passowrd: e.target.value})} />
             </Form.Item>
-            <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-              <Button type="primary" htmlType="submit" loading={loading}>
-                Entrar
-              </Button>
+            <Form.Item>
+              <div style={{textAlign: "center"}}>
+                <Button type="primary" htmlType="submit" loading={loading}>
+                  Entrar
+                </Button>
+              </div>
             </Form.Item>
           </Form>
         </Col>
