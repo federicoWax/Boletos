@@ -1,6 +1,6 @@
 import { ChangeEvent, FC, useState } from 'react';
 import { Form, Input, Button, Row, Col, message } from 'antd';
-import logoLogin from '../../assets/login.png';
+import logoLogin from '../../assets/login.jpg';
 import firebase from '../../firebase/firebase';
 
 interface Account {
@@ -31,7 +31,9 @@ const Login : FC = () => {
     <div style={{marginTop: "15vh"}}>
       <Row justify="center">
         <Col style={{width: 400}}>
-          <img alt="botes-login" height={250} style={{width: "90%", marginBottom: 20, paddingLeft: 40}} src={logoLogin}/>
+          <div style={{textAlign: "center"}}>
+            <img alt="rifas-login" height={250} style={{ marginBottom: 20, borderRadius: "25%"}} src={logoLogin}/>
+          </div>
           <Form
             name="basic"
             labelCol={{ span: 8 }}

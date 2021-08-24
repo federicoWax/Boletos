@@ -3,7 +3,7 @@ import { Layout } from 'antd';
 
 const FooterComponent: FC = () => {
   return (
-    <Layout.Footer style={{ textAlign: 'center' }}>Botes { (new Date()).getFullYear() } © </Layout.Footer>
+    <Layout.Footer style={{ textAlign: 'center' }}>Rifas Herson { (new Date()).getFullYear() } © </Layout.Footer>
   )
 }
 
