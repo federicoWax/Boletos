@@ -9,8 +9,13 @@ import LayoutComponent from '../components/Layout/Layout';
 import Raffles from '../views/Raffles/Raffles';
 
 const privateRoutes: string[] = [
-  "/boletos"
-];
+  "/rifas"
+]; 
+
+const publicRoutes: string[] = [
+  "/",
+  "login"
+]
 
 const Routes: FC = () => {
   const { user } = useAuth();
@@ -21,7 +26,7 @@ const Routes: FC = () => {
           <LayoutComponent />
           <Layout className="site-layout">
             <Layout.Content style={{ margin: '0 16px', padding: 30 }}>
-              { window.location.pathname === "/login" && user && <Redirect to="/boletos" /> }
+              { publicRoutes.includes(window.location.pathname) && user && <Redirect to="/rifas" /> }
               { privateRoutes.includes(window.location.pathname) && !user && <Redirect to="/login" /> }
               <Switch>
                 <Route exact path="/" component={Home} />
