@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useState } from 'react';
+import { FC, useState } from 'react';
 import { Form, Input, Button, Row, Col, message } from 'antd';
 import logoLogin from '../../assets/login.jpg';
 import firebase from '../../firebase/firebase';

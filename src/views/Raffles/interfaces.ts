@@ -3,8 +3,8 @@ import firebase from "../../firebase/firebase";
 
 export interface Promotion {
   description: string,
-  discount: number,
-  countTickets: number
+  discount: number | string,
+  countTickets: number | string
 }
   
 export interface Ticket {
@@ -28,11 +28,12 @@ export interface Raffle {
   id: string;
   name: string;
   description: string;
-  finalDate: firebase.firestore.Timestamp,
+  finalDate: firebase.firestore.Timestamp | null,
   promotions: Promotion[],
-  tickets: Ticket[],
-  payments: PaymentMethod[],
+  paymentMethods: PaymentMethod[],
   images: Image[],
-  image: Image,
-  status: boolean
+  image: Image | File| null | undefined,
+  active: boolean,
+  priceTicket: number,
+  countTickets: number | string
 }
