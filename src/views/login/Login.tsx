@@ -28,7 +28,7 @@ const Login : FC = () => {
   }
 
   return (
-    <div style={{marginTop: "15vh"}}>
+    <div style={{marginTop: "15vh", padding: 30}}>
       <Row justify="center">
         <Col style={{width: 400}}>
           <div style={{textAlign: "center"}}>

@@ -13,7 +13,6 @@ const privateRoutes: string[] = [
 ]; 
 
 const publicRoutes: string[] = [
-  "/",
   "/login"
 ]
 
@@ -25,7 +24,7 @@ const Routes: FC = () => {
       <Layout style={{ minHeight: '100vh', maxWidth: '100wh', overflow: "hidden"}}>
           <LayoutComponent />
           <Layout className="site-layout">
-            <Layout.Content style={{ margin: '0 16px', padding: 30 }}>
+            <Layout.Content>
               { publicRoutes.includes(window.location.pathname) && user && <Redirect to="/rifas" /> }
               { privateRoutes.includes(window.location.pathname) && !user && <Redirect to="/login" /> }
               <Switch>

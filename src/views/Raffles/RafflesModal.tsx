@@ -1,7 +1,7 @@
 import { FC, useState } from 'react';
 import { Modal, Row, Col, Form, Input, DatePicker, Typography, Divider, Button, message } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Image, PaymentMethod, Promotion, Raffle, Ticket } from './interfaces';
+import { PaymentMethod, Promotion, Raffle, Ticket } from './interfaces';
 import firebase from "../../firebase/firebase";
 import moment from 'moment';
 import ServiceFirebase from '../../services/firebase';
@@ -136,7 +136,7 @@ const RafflesModal: FC<RafflesModalProps> = ({open, onClose}) => {
             >
               <DatePicker 
                 placeholder="" 
-                onChange={(e) => setRaffle({...raffle, finalDate: e !== null ? firebase.firestore.Timestamp.fromDate(e?.toDate()) : null }) }
+                onChange={(e) => setRaffle({...raffle, finalDate: e !== null ? firebase.firestore.Timestamp.fromDate(e.toDate()) : null }) }
                 value={raffle.finalDate === null ? raffle.finalDate : moment(raffle.finalDate?.toDate())}
               />
             </Form.Item>

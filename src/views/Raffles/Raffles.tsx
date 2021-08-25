@@ -1,13 +1,11 @@
-import { useEffect, useState } from "react";
-import { FC } from "react";
-import { Button, Spin, Table, Typography } from 'antd';
+import { FC, useEffect, useState } from "react";
+import moment from "moment";
+import { Button, Table, Typography } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import RafflesModal from './RafflesModal';
 import { Raffle } from "./interfaces";
-import firebase from "../../firebase/firebase";
 import { Image } from "./interfaces";
-import moment from "moment";
-
+import firebase from "../../firebase/firebase";
 
 const columns = [
   {
@@ -35,7 +33,6 @@ const columns = [
 ];
 
 const Raffles: FC = () => {
-  const [loading, setLoading] = useState<boolean>(true);
   const [open, setOpen] = useState<boolean>(false);
   const [raffles, setRaffles] = useState<Raffle[]>([]);
 
@@ -52,9 +49,7 @@ const Raffles: FC = () => {
           });
         } catch (error) {
           console.log(error);
-        } finally {
-          setLoading(false);
-        }
+        } 
       } 
     }
 
@@ -63,7 +58,7 @@ const Raffles: FC = () => {
     return () => { mounted = false };
   }, []);
 
-  if(loading) return <div style={{
+/*   if(loading) return <div style={{
       position: "absolute",
       left: "50%",
       top: "50%",
@@ -71,10 +66,10 @@ const Raffles: FC = () => {
       transform: "translate(-50%, -50%)",
     }}>    
       <Spin tip="Cargando..." />
-    </div>
+    </div> */
 
   return (
-    <>
+    <div style={{ padding: 30 }}>
       <div style={{width: "100%"}}>
         <Button 
           style={{float: "right"}} 
@@ -90,7 +85,7 @@ const Raffles: FC = () => {
       <div style={{width: "100%"}}>
       {
         raffles.length
-        ? <Table dataSource={raffles} columns={columns} />
+        ? <Table dataSource={raffles} columns={columns} style={{overflowX: "auto"}}/>
         : <div style={{textAlign: "center", marginTop: 250}}> Sin Rifas Registradas </div>
       }
       </div>
@@ -98,7 +93,7 @@ const Raffles: FC = () => {
         open={open}  
         onClose={() => setOpen(false)}
       />
-    </>
+    </div>
   )
 }
 
