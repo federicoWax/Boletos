@@ -22,7 +22,7 @@ const columns = [
     title: 'Fecha de cierre',
     dataIndex: 'finalDate',
     key: 'finalDate',
-    render: (finalDate: firebase.firestore.Timestamp) => <Typography.Text>{moment(finalDate.toDate()).format("DD/MM/YYYY")}</Typography.Text>,
+    render: (finalDate: firebase.firestore.Timestamp) => <Typography.Text>{moment(finalDate.toDate()).format("DD/MM/YYYY hh:mm a")}</Typography.Text>,
   },
   {
     title: 'Imagen principal',
@@ -85,7 +85,7 @@ const Raffles: FC = () => {
       <div style={{width: "100%"}}>
       {
         raffles.length
-        ? <Table dataSource={raffles} columns={columns} style={{overflowX: "auto"}}/>
+        ? <Table rowKey="id" dataSource={raffles} columns={columns} style={{overflowX: "auto"}}/>
         : <div style={{textAlign: "center", marginTop: 250}}> Sin Rifas Registradas </div>
       }
       </div>

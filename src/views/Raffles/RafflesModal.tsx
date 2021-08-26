@@ -1,7 +1,7 @@
 import { FC, useState } from 'react';
-import { Modal, Row, Col, Form, Input, DatePicker, Typography, Divider, Button, message } from 'antd';
+import { Modal, Row, Col, Form, Input, DatePicker, Typography, Button, message } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import { PaymentMethod, Promotion, Raffle, Ticket } from './interfaces';
+import { Promotion, Raffle, Ticket } from './interfaces';
 import firebase from "../../firebase/firebase";
 import moment from 'moment';
 import ServiceFirebase from '../../services/firebase';
@@ -18,7 +18,6 @@ const INIT_RAFFLE = {
   description: "",
   finalDate: null,
   promotions: [],
-  paymentMethods: [],
   images: [],
   image: null,
   active: true,
@@ -28,8 +27,8 @@ const INIT_RAFFLE = {
 
 const RafflesModal: FC<RafflesModalProps> = ({open, onClose}) => {
   const [raffle, setRaffle] = useState<Raffle>(INIT_RAFFLE);
-  const [form] = Form.useForm();
   const [saving, setSaving] = useState<boolean>(false);
+  const [form] = Form.useForm();
 
   const add = async () => {
     if(!raffle.image) {
@@ -64,11 +63,15 @@ const RafflesModal: FC<RafflesModalProps> = ({open, onClose}) => {
         tickets.push({
           buyer: "",
           status: "Libre",
-          number: i + 1 
+          number: i + 1,
+          reservationDate: null,
+          phone: null
         });
       }
 
-      await serviceFirebase.add("raffles", _rafle, "tickets", tickets);
+      delete _rafle.id; 
+
+      await serviceFirebase.addWithRelation("raffles", _rafle, "tickets", "raffleId", tickets);
 
       message.success("Rifa guardada con exito");
     } catch (error) {
@@ -128,22 +131,24 @@ const RafflesModal: FC<RafflesModalProps> = ({open, onClose}) => {
               />
             </Form.Item>
           </Col>
-          <Col xs={12} sm={12} md={6}>
+          <Col xs={24} sm={24} md={6}>
             <Form.Item
               label="Fecha Cierre"
               name="finalDate"
               rules={[{ required: true, message: 'Favor de seleccionar la Fecha de Cierre' }]}
             >
               <DatePicker 
+                style={{width: "100%"}}
+                showTime 
                 placeholder="" 
                 onChange={(e) => setRaffle({...raffle, finalDate: e !== null ? firebase.firestore.Timestamp.fromDate(e.toDate()) : null }) }
                 value={raffle.finalDate === null ? raffle.finalDate : moment(raffle.finalDate?.toDate())}
               />
             </Form.Item>
           </Col>
-          <Col xs={6} sm={6} md={6}>
+          <Col xs={12} sm={12} md={12}>
             <Form.Item
-              label="Boletos"
+              label="Cantidad de boletos"
               name="countTickets"
               rules={[{ required: true, message: 'Favor de escribir la Cantidad de boletos' }]}
             >
@@ -155,7 +160,7 @@ const RafflesModal: FC<RafflesModalProps> = ({open, onClose}) => {
               />
             </Form.Item>
           </Col>
-          <Col xs={6} sm={6} md={6}>
+          <Col xs={12} sm={12} md={12}>
             <Form.Item
               label="Precio"
               name="priceTicket"
@@ -257,78 +262,23 @@ const RafflesModal: FC<RafflesModalProps> = ({open, onClose}) => {
               </Col>
             </Row>
           </Col>
-          <Divider />
-          <Col xs={24} sm={24} md={24}>
-            <Row>
-              <Col xs={20} sm={20} md={20}>
-                <Typography.Text>Metodos de pago</Typography.Text>
-              </Col>
-              <Col xs={4} sm={4} md={4}>
-                <Button 
-                  icon={<PlusOutlined />} 
-                  type="primary"
-                  onClick={() => setRaffle({...raffle, paymentMethods: [...raffle.paymentMethods, { description: "", number: "", typePayment: "" }] })} 
-                />
-              </Col>
-              <Col xs={24} sm={24} md={24}>
-              {
-                raffle.paymentMethods.map((paymentMethod: PaymentMethod, index: number) => (
-                  <Row key={index} gutter={10}>
-                    <Col xs={20} sm={20} md={20}>
-                      <Form.Item label="Tipo de pago">
-                        <Input 
-                          value={paymentMethod.typePayment} 
-                          onChange={(e) => 
-                            setRaffle({
-                              ...raffle, 
-                              paymentMethods: raffle.paymentMethods.map((p, i) => ({...p, typePayment: i === index ? e.target.value : p.typePayment}))
-                            })
-                          } 
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={4} sm={4} md={4}>
-                      <Button 
-                        icon={<DeleteOutlined />} 
-                        style={{backgroundColor: "red", color: "white", marginTop: 30}}
-                        onClick={() => setRaffle({...raffle, paymentMethods: raffle.paymentMethods.filter((p, i) => i !== index) })} 
-                      />
-                    </Col>
-                    <Col xs={24} sm={24} md={24}>
-                      <Form.Item  label="Descripción">
-                        <Input.TextArea 
-                          rows={2} 
-                          value={paymentMethod.description}
-                          onChange={(e) => 
-                            setRaffle({
-                              ...raffle, 
-                              paymentMethods: raffle.paymentMethods.map((p, i) => ({...p, description: i === index ? e.target.value : p.description}))
-                            })
-                          } 
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={24} md={24}>
-                      <Form.Item label="Numero de cuenta o tarjeta">
-                        <Input 
-                          value={paymentMethod.number} 
-                          onChange={(e) => 
-                            setRaffle({
-                              ...raffle, 
-                              paymentMethods: raffle.paymentMethods.map((p, i) => ({...p, number: i === index ? e.target.value : p.number}))
-                            })
-                          } 
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                ))
-              }
-              </Col>
-              <Divider />
-              <Input type="file" accept="image/png, image/gif, image/jpeg" onChange={(e) => setRaffle({...raffle, image: e.target.files?.item(0) })} />
-            </Row>
-          </Col>
+          <Input
+            style={{marginTop: 20}} 
+            type="file" 
+            accept="image/png, image/gif, image/jpeg" 
+            onChange={(e) => setRaffle({...raffle, image: e.target.files?.item(0) })} 
+          />
+          { 
+            raffle.image
+              ? 
+                <img 
+                  alt="rifas-login" 
+                  height={120} 
+                  style={{ padding: 10,  borderRadius: "25%"}} 
+                  src={raffle.image instanceof File ? URL.createObjectURL(raffle.image) : raffle.image.imageUrl}
+                /> 
+              : null
+          }
         </Row>
       </Form>
     </Modal>

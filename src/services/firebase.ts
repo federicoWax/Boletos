@@ -5,10 +5,10 @@ class ServiceFirebase {
     return await firebase.firestore().collection(collection).get();
   }
 
-  async add(collection: string, data: any, subCollection: string, dataSubCollection: any[]) {
+  async addWithRelation(collection: string, data: any, relationCollection: string, propRelation: string, dataSubCollection: any[]) {
     const ref = await firebase.firestore().collection(collection).add(data);
 
-    await Promise.all(dataSubCollection.map((item) => ref.collection(subCollection).add(item)));
+    await Promise.all(dataSubCollection.map((item) => firebase.firestore().collection(relationCollection).add({...item, [propRelation]: ref.id})));
   }
 
   async uploadFirebase(path: string, file: File) {
