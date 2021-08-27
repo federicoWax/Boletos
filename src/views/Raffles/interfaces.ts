@@ -22,7 +22,8 @@ export interface TicketFirebase {
   status: string,
   reservationDate: firebase.firestore.Timestamp | null,
   phone: number | null,
-  raffleId: string
+  raffleId: string,
+  selected: boolean
 }
 export interface Image {
   imageUrl: string,
