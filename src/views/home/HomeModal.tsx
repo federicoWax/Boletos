@@ -66,7 +66,7 @@ const HomeModal: FC<RafflesModalProps> = ({open, idsTicket, onClose}) => {
           Haga su pago como se le indica de lo contrario no se hara válido.
         </div>
         <div>
-          INDENTIFICA CUÁL ES PARA DEPÓSITO Y CUAL ES PARA TRANSFERENCIA
+          INDENTIFICA CUÁL ES PARA DEPÓSITO Y CUÁL ES PARA TRANSFERENCIA
         </div>
         <div style={{color: "blueviolet", fontSize: 20}}>
           BANAMEX
@@ -116,7 +116,7 @@ const HomeModal: FC<RafflesModalProps> = ({open, idsTicket, onClose}) => {
               <Input value={formModal.name} onChange={(e) => setFormModal({...formModal, name: e.target.value})} />
             </Form.Item>
           </Col>
-          <Col xs={24} sm={24} md={12} style={{marginTop: -5}}>
+          <Col xs={24} sm={24} md={12} style={{marginTop: -5, marginBottom: -28}}>
             <Form.Item
               label="Teléfono"
               name="phone"

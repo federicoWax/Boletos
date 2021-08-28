@@ -1,12 +1,17 @@
 import { FC, useEffect, useState } from 'react';
-import { Col, Row, Switch, Input, Divider, Tag, Spin, Avatar, message } from 'antd';
-import { ShoppingCartOutlined, CheckOutlined, WhatsAppOutlined } from '@ant-design/icons';
+import Switch from '@material-ui/core/Switch';
+import Box from '@material-ui/core/Box';
+import { Col, Row, Input, Divider, Spin, Avatar, message, Button } from 'antd';
+import { ShoppingCartOutlined, CheckOutlined, WhatsAppOutlined, CaretDownOutlined, SearchOutlined } from '@ant-design/icons';
 import { useFirestoreConnect } from 'react-redux-firebase';
 import { useSelector } from 'react-redux';
 import logoLogin from '../../assets/login.jpg';
 import firebase, { RootState } from "../../firebase/firebase";
 import { Image, Promotion, RaffleFirebase, TicketFirebase } from '../Raffles/interfaces';
 import HomeModal from './HomeModal';
+import moment from 'moment';
+import 'moment/locale/es';
+import FullLoader from '../../components/FullLoader/FullLoader';
 
 const nowFirebase = firebase.firestore.Timestamp.now();
 
@@ -24,6 +29,7 @@ const Home: FC = () => {
   const [open, setOpen] = useState<boolean>(false); 
   const [startAt, setStartAt] = useState<number>(1);
   const [idsTicket, setIdsTicket] = useState<Array<string>>([]);
+  const [ticket, setTikcet] = useState<TicketFirebase | null>(null);
   
   useFirestoreConnect(() => [
     { collection: 'raffles', where: [["finalDate", ">", nowFirebase]] }
@@ -77,65 +83,105 @@ const Home: FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startAt]);
 
-  if(loading) return <div style={{
-    position: "absolute",
-    left: "50%",
-    top: "50%",
-    WebkitTransform: "translate(-50%, -50%)",
-    transform: "translate(-50%, -50%)",
-  }}>    
-    <Spin tip="Cargando..." />
-  </div>;
+  if(loading) return <FullLoader />;
 
   const onScrollTickets = async (e: any) => {
-    const bottom = parseInt((e.target.scrollHeight - e.target.scrollTop).toString()) === e.target.clientHeight;
+    const bottom = parseInt((e.target.scrollHeight - e.target.scrollTop).toString()) > e.target.clientHeight -1;
 
     if (bottom && startAt < 50) { 
       setStartAt(startAt + 50);
     }
   }
+
+  const searchTicket = async (raffle: RaffleFirebase) => {
+    try {
+      const docTicket = await firebase.firestore().collection("tickets")
+        .where("raffleId", "==", raffle.id)
+        .where("number", "==", parseInt(search))
+        .get();
+
+      if(docTicket.empty) {
+        message.error("Boleto no encontrado");
+        return;
+      }
+
+      setTikcet(
+        docTicket.docs.map((doc) => ({id: doc.id, ...doc.data()}))[0] as TicketFirebase
+      )
+    } catch (error) {
+      console.log(error);
+    }
+  }
   
   return (
     <div style={{color: "white", backgroundColor: "orangered", textAlign: "center"}}>
-      <div style={{textAlign: "center", width: "100%", backgroundColor: "black"}}>
-        <img alt="rifas-login" height={100} style={{ }} src={logoLogin}/>
+      <div style={{
+        textAlign: "center", 
+        width: "100%", 
+        backgroundColor: "black", 
+        position: "fixed", 
+        zIndex: 999,
+        height: 65,
+      }}>
+        <img alt="rifas-login" height={60} src={logoLogin}/>
       </div>
-      <div>
+      <div style={{paddingTop: 60}}>
       {
         raffles.length
         ?
           raffles.map((raffle: RaffleFirebase)  => (
             <div key={raffle.id}>
-              <div style={{fontSize: 30, fontWeight: "bold"}}>
+              <div style={{fontSize: 30 }}>
                 { raffle.name.toUpperCase() }
               </div>
-              <div style={{fontSize: 20, fontWeight: "bold", marginBottom: 5}}>
+              <div style={{fontSize: 20, marginBottom: 5, marginTop: -10}}>
                 { raffle.description.toUpperCase() }
               </div>
-              <Row>
-                <Col md={9}></Col>
-                <Col md={6}>
-                  <img src={(raffle.image as Image).imageUrl} alt="imagenCarro" height={280} style={{width: "100%", objectFit: "fill"}}/>
+              <Row style={{backgroundColor: "white", color: "orangered"}}>
+                <Col xs={3} sm={3} md={3}>
+                  <CaretDownOutlined style={{fontSize: 40}} />
                 </Col>
-                <Col span={9}></Col>
+                <Col style={{fontSize: 20, marginTop: 5}} xs={18} sm={18} md={18}>
+                  <b>LISTA DE BOLETOS ABAJO</b>
+                </Col>
+                <Col xs={3} sm={3} md={3}>
+                  <CaretDownOutlined style={{fontSize: 40}} />
+                </Col>
               </Row>
-              <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 5}}>
-                Precio Boleto: ${ raffle.priceTicket.toString().toUpperCase() }
+              <Row>
+                <Col xs={24} sm={24} md={9}></Col>
+                <Col xs={24} sm={24} md={6}>
+                  <img 
+                    src={(raffle.image as Image).imageUrl} 
+                    alt="imagenCarro" 
+                    height={280} 
+                    style={{width: "100%", objectFit: "contain", padding: 10}}
+                  />
+                </Col>
+                <Col xs={24} sm={24} md={9}></Col>
+              </Row>
+              <div style={{ fontSize: 25, marginBottom: 5, marginTop: -10}}>
+                <div>
+                  Precio Boleto: ${ raffle.priceTicket.toString().toUpperCase() }
+                </div>
+                <div style={{marginTop: -10}}>
+                  (SÓLO HASTA { moment(raffle.finalDate?.toDate()).format("DD/MMMM").toUpperCase() })
+                </div>
               </div>
               {
                 raffle.promotions.length
                 ?
                   <div style={{backgroundColor: "white", color: "black", fontSize: 20, paddingBottom: 6}}>
-                    <b>¡¡PROMOCIONES!!</b>
                   <Divider style={{margin: 0, padding: 0}}/>
                   {
                     raffle.promotions.map((promotion: Promotion, index: number) => (
                       <Row key={index}>
                         <Col sm={20} xs={20} md={20}>
-                          {index + 1}.- {promotion.description}
+                          <b>{index + 1}  {promotion.description}</b>
                         </Col>
                         <Col sm={4} xs={4} md={4}>
                           <Switch  
+                            style={{color: "orangered"}}
                             checked={promotionSelected.index === index && promotionSelected.checked} 
                             onChange={(e) =>  {
                               setRaffles(raffles.map(r => ({
@@ -145,7 +191,7 @@ const Home: FC = () => {
                                   : r.tickets  
                               })));
                               setIdsTicket([]);
-                              setPromotionSeleted({ index, checked: e, countTickets: parseInt(promotion.countTickets.toString()) })
+                              setPromotionSeleted({ index, checked: e.target.checked, countTickets: parseInt(promotion.countTickets.toString()) })
                             }} 
                           />
                         </Col>
@@ -158,76 +204,115 @@ const Home: FC = () => {
                   null
               }
               <div style={{padding: 20}}>
-                <Row gutter={20}>
+                <Row gutter={20} style={{marginTop: -10, marginBottom: -15}}>
                   <Col xs={20} sm={20} md={20}>
-                    <Input type="number" placeholder="Busca tu boleto aqui" onChange={(e) => setSearch(e.target.value)} />
-                  </Col>
-                  <Col xs={4} sm={4} md={4}>
-                    <Avatar 
-                      style={{ 
-                        cursor: "pointer",
-                        backgroundColor: '#00FF04', 
-                        height: 40,
-                        width: 40,
-                        marginTop: -6
+                    <Input
+                      value={search} 
+                      type="number" 
+                      placeholder="Busca tu boleto aqui" 
+                      onChange={(e) => {
+                        if(!e.target.value) {
+                          setTikcet(null);
+                        }
+
+                        setSearch(e.target.value);
                       }}
-                    >
-                      <ShoppingCartOutlined 
-                        onClick={() => {
-                          if(promotionSelected.checked && promotionSelected.countTickets > idsTicket.length) {
-                            const missing = promotionSelected.countTickets - idsTicket.length;
-                            message.error("Favor de seleccionar "+ missing + " boletos para hacer válida la promoción!");
-                            return; 
-                          }
-
-                          if(!idsTicket.length) {
-                            message.error("Favor de seleccionar un boleto!");
-                            return;
-                          }
-
-                          setOpen(true);
-                        }} 
-                        style={{fontSize: 32, marginTop: 4, marginRight: 2}}
-                      />
-                    </Avatar>
+                    />
+                  </Col>
+                  <Col xs={4} sm={4} md={4} >
+                    <Button icon={<SearchOutlined />} onClick={async () => await searchTicket(raffle)} />
                   </Col>
                 </Row>
               </div>
-              <Row style={{backgroundColor: "white", padding: 10, maxHeight: 300, overflowY: "auto"}} onScroll={onScrollTickets}>
+              <Box display="flex" justifyContent="center" style={{width: "100%", marginBottom: 10, marginTop: 5}}>
+                <Box pr={1}>
+                  <div  
+                    style={{ 
+                      height: 30,
+                      cursor: "pointer", 
+                      backgroundColor: "green",
+                      borderRadius: 30,
+                      width: 60,  
+                    }}  
+                  >
+                  </div>                    
+                </Box>
+                <Box pl={1} style={{marginTop: 4}}>
+                  <b>Verde - Libre</b>
+                </Box>
+              </Box>
               {
-                raffle.tickets.map((ticket: TicketFirebase) => (
-                  <Col sm={4} xs={4} md={4} key={ticket.id} style={{padding: 5}}>
-                    <Tag  
-                      style={{minWidth: 50, cursor: "pointer"}} 
-                      color={ticket.status === "Libre" ? "green" : "red"} 
+                ticket
+                ?
+                  <div style={{padding: 10, display: "inline-block"}}>
+                    <div  
+                      style={{ 
+                        textAlign:"center",
+                        height: 30,
+                        cursor: "pointer", 
+                        backgroundColor: ticket.status === "Libre" ? "green" : "red",
+                        borderRadius: 30,
+                        width: 100
+                      }}  
                       onClick={() => {
                         if(ticket.status !== "Libre") return;
 
-                        if(!ticket.selected && promotionSelected.checked && promotionSelected.countTickets === raffle.tickets.filter(t => t.selected).length) {
-                          message.info("Tienes una promoción seleccionada, no puedes seleccioanr otro boleto.");
-                          return;
-                        }
-                        
-                        if(!ticket.selected) {
-                          setIdsTicket([...idsTicket, ticket.id]);
+                        let _idsTicket = [...idsTicket];
+
+                        if(!idsTicket.includes(ticket.id)) {
+                          _idsTicket = [..._idsTicket, ticket.id];
                         } else {
                           setIdsTicket(idsTicket.filter(it => it !== ticket.id));
                         }
                         
-                        setRaffles(raffles.map(r => ({
-                          ...r,
-                          tickets: raffle.id === r.id 
-                            ? r.tickets.map(t => ({...t, selected: t.id === ticket.id ? !t.selected : t.selected}))
-                            : r.tickets  
-                        }))) 
+                        if(!promotionSelected.checked || promotionSelected.countTickets === _idsTicket.length) {
+                          setOpen(true);
+                        }
                       }}
                     >
-                    { ticket.selected ? <CheckOutlined /> : ticket.number }
-                    </Tag> 
-                  </Col>
-                ))
+                      <div style={{paddingTop: 4}}>
+                      { idsTicket.includes(ticket.id) ? <CheckOutlined /> : ticket.number }
+                      </div>
+                    </div> 
+                  </div>
+                :
+                  <Row style={{backgroundColor: "white", padding: 10, maxHeight: 300, overflowY: "auto"}} onScroll={onScrollTickets}>
+                  {
+                    raffle.tickets.map((ticket: TicketFirebase) => (
+                      <Col sm={4} xs={4} md={1} key={ticket.id} style={{padding: 5}}>
+                        <div  
+                          style={{ 
+                            height: 30,
+                            cursor: "pointer", 
+                            backgroundColor: ticket.status === "Libre" ? "green" : "red",
+                            borderRadius: 30
+                          }}  
+                          onClick={() => {
+                            if(ticket.status !== "Libre") return;
+
+                            let _idsTicket = [...idsTicket];
+
+                            if(!idsTicket.includes(ticket.id)) {
+                              _idsTicket = [..._idsTicket, ticket.id];
+                              setIdsTicket(_idsTicket);
+                            } else {
+                              setIdsTicket(idsTicket.filter(it => it !== ticket.id));
+                            }
+
+                            if(!promotionSelected.checked  || promotionSelected.countTickets === _idsTicket.length) {
+                              setOpen(true);
+                            }
+                          }}
+                        >
+                          <div style={{paddingTop: 4}}>
+                          { idsTicket.includes(ticket.id) ? <CheckOutlined /> : ticket.number }
+                          </div>
+                        </div> 
+                      </Col>
+                    ))
+                  }
+                  </Row>
               }
-              </Row>
             </div>
           ))
         :
@@ -235,7 +320,7 @@ const Home: FC = () => {
       }
       </div>
       <a
-        href="https://wa.me/5216621744987"
+        href="https://wa.me/5216624334349"
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -266,10 +351,13 @@ const Home: FC = () => {
                 : r.tickets  
             })));
             setIdsTicket([]);
+            setTikcet(null);
+            setSearch("");
+          } else {
+            setIdsTicket([]);
           }
 
-          setOpen(!open)
-
+          setOpen(!open);
         }}
         idsTicket={idsTicket}
       />
