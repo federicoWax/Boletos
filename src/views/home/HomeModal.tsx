@@ -1,7 +1,8 @@
 import { FC, useState } from 'react';
-import { Col, Form, Input, message, Modal, Row } from 'antd';
+import { Col, Form, Input, Modal, Row } from 'antd';
 import ServiceFirebase from '../../services/firebase';
 import firebase from '../../firebase/firebase';
+import AlertC from '../../components/Alert/Alert';
 
 const serviceFirebase = new ServiceFirebase();
 
@@ -19,6 +20,7 @@ interface FormModal {
 const HomeModal: FC<RafflesModalProps> = ({open, idsTicket, onClose}) => {
   const [formModal, setFormModal] = useState<FormModal>({name: "", phone: ""}); 
   const [saving, setSaving] = useState<boolean>(false);
+  const [message, setMessage] = useState<string>("");
   const [form] = Form.useForm();
 
   const onAccept = async () => {
@@ -33,7 +35,10 @@ const HomeModal: FC<RafflesModalProps> = ({open, idsTicket, onClose}) => {
         serviceFirebase.updateDoc("tickets", id, { buyer: formModal.name, phone: formModal.phone, status: "Reservado", reservationDate })
       ));
 
-      message.success("Reserva realizada con exito!")
+      setMessage("Reserva realizada con exito!");
+      setTimeout(() => {
+        setMessage("");
+      }, 4000)
       onClose(idsTicket);  
     } catch (error) { 
       console.log(error);
@@ -43,6 +48,7 @@ const HomeModal: FC<RafflesModalProps> = ({open, idsTicket, onClose}) => {
   }
 
   return (
+    <>
     <Modal
       okButtonProps={{
         style: {backgroundColor: "orangered"}
@@ -128,6 +134,13 @@ const HomeModal: FC<RafflesModalProps> = ({open, idsTicket, onClose}) => {
         </Row>
       </Form>
     </Modal>
+    <AlertC 
+      open={Boolean(message)}
+      onClose={() => setMessage("")}
+      severity="success"
+      message={message}
+    />
+    </>
   )
 }
 
