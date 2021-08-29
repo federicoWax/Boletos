@@ -5,7 +5,8 @@ import { useHistory, useLocation } from "react-router-dom";
 import firebase from '../../firebase/firebase';
 import { useAuth } from "../../context/AuthContext";
 import { MdAttachMoney } from 'react-icons/md';
-import { BiDoorOpen, BiLogIn } from 'react-icons/bi';
+import { BiDoorOpen } from 'react-icons/bi';
+import { MdConfirmationNumber } from 'react-icons/md';
 
 const { Sider } = Layout;
 const { SubMenu } = Menu;
@@ -20,28 +21,21 @@ const LayoutComponent: FC = () => {
   
   const signOut = async () => await firebase.auth().signOut();
 
-  if(!user && ["/", "/login"].includes(location.pathname)) return null;
+  if(!user && ["/lista", "/login"].includes(location.pathname)) return null;
   
   return (
     <Sider collapsible collapsed={collapsed} onCollapse={onCollapse}>
       <div className="logo" />
-      <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline">
-        <Menu.Item onClick={() => history.push("/rifas")} key="1" icon={<MdAttachMoney /> }>
+      <Menu theme="dark" defaultSelectedKeys={[location.pathname]} mode="inline">
+        <Menu.Item onClick={() => history.push("/rifas")} key="/rifas" icon={<MdAttachMoney /> }>
           Rifas
         </Menu.Item>
-        {
-          user 
-          ?
-            <>
-            <SubMenu key="sub1" icon={<UserOutlined />} title="Cuenta">
-              <Menu.Item key="4" icon={<BiDoorOpen />} onClick={signOut}>Cerrar sesión</Menu.Item>
-            </SubMenu>
-            </>
-          :
-          <Menu.Item key="2" icon={<BiLogIn />}>
-            Login
-          </Menu.Item>
-        }
+        <Menu.Item onClick={() => history.push("/boletos")} key="/boletos" icon={<MdConfirmationNumber /> }>
+          Boletos
+        </Menu.Item>
+        <SubMenu key="sub1" icon={<UserOutlined />} title="Cuenta">
+          <Menu.Item key="4" icon={<BiDoorOpen />} onClick={signOut}>Cerrar sesión</Menu.Item>
+        </SubMenu>
       </Menu>
     </Sider>
   )

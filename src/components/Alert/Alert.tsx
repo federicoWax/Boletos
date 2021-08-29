@@ -1,8 +1,6 @@
 import { FC } from 'react';
 import { Snackbar } from '@material-ui/core';
 import { Alert, Color } from '@material-ui/lab';
-import { message } from 'antd';
-
 interface PropsErrorAlert {
   open: boolean;
   onClose: Function;

@@ -7,6 +7,7 @@ import Footer from '../components/Footer/Footer';
 import { Layout } from 'antd';
 import LayoutComponent from '../components/Layout/Layout';
 import Raffles from '../views/Raffles/Raffles';
+import Tickets from '../views/tickets/tickets';
 
 const privateRoutes: string[] = [
   "/rifas"
@@ -25,12 +26,14 @@ const Routes: FC = () => {
           <LayoutComponent />
           <Layout className="site-layout">
             <Layout.Content>
+              { window.location.pathname === "/" && <Redirect to="/lista" /> }
               { publicRoutes.includes(window.location.pathname) && user && <Redirect to="/rifas" /> }
               { privateRoutes.includes(window.location.pathname) && !user && <Redirect to="/login" /> }
               <Switch>
-                <Route exact path="/" component={Home} />
                 <Route exact path="/login" component={Login} />
+                <Route exact path="/lista" component={Home} />
                 <Route exact path="/rifas" component={Raffles} />
+                <Route exact path="/boletos" component={Tickets} />
               </Switch>
             </Layout.Content>
           <Footer />

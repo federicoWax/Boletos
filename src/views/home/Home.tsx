@@ -1,8 +1,8 @@
 import { FC, useEffect, useState } from 'react';
 import Switch from '@material-ui/core/Switch';
 import Box from '@material-ui/core/Box';
-import { Col, Row, Input, Divider, Spin, Avatar, message, Button } from 'antd';
-import { ShoppingCartOutlined, CheckOutlined, WhatsAppOutlined, CaretDownOutlined, SearchOutlined } from '@ant-design/icons';
+import { Col, Row, Input, Divider, Avatar, message, Button } from 'antd';
+import { CheckOutlined, WhatsAppOutlined, CaretDownOutlined, SearchOutlined } from '@ant-design/icons';
 import { useFirestoreConnect } from 'react-redux-firebase';
 import { useSelector } from 'react-redux';
 import logoLogin from '../../assets/login.jpg';
@@ -12,7 +12,10 @@ import HomeModal from './HomeModal';
 import moment from 'moment';
 import 'moment/locale/es';
 import FullLoader from '../../components/FullLoader/FullLoader';
+import ServiceFirebase from '../../services/firebase';
+import HomeModalInfo from './HomeModalInfo';
 
+const serviceFirebase = new ServiceFirebase();
 const nowFirebase = firebase.firestore.Timestamp.now();
 
 interface SelectedPromotion {
@@ -30,6 +33,7 @@ const Home: FC = () => {
   const [startAt, setStartAt] = useState<number>(1);
   const [idsTicket, setIdsTicket] = useState<Array<string>>([]);
   const [ticket, setTikcet] = useState<TicketFirebase | null>(null);
+  const [openInfo, setOpenInfo] = useState<boolean>(false)
   
   useFirestoreConnect(() => [
     { collection: 'raffles', where: [["finalDate", ">", nowFirebase]] }
@@ -41,7 +45,7 @@ const Home: FC = () => {
       const getData = async () => {
         try {
           const _raffles = await Promise.all(selectorRaffles.map(async (sr) => {
-            const docTickets = await firebase.firestore().collection("tickets").where("raffleId", "==", sr.id).orderBy("number").startAt(1).limit(50).get();
+            const docTickets = await firebase.firestore().collection("tickets").where("raffleId", "==", sr.id).orderBy("number").startAt(1).limit(100).get();
             
             return { ...sr, tickets: docTickets.docs.map((dt) => ({id: dt.id, selected: false, ...dt.data()}) as TicketFirebase) }
           }));
@@ -62,11 +66,11 @@ const Home: FC = () => {
     if(startAt > 1) {
       const getData = async () => {
         try {
-          if(raffles.length >= 100) return;
+          if(raffles[0].tickets.length >= 5000) return;
 
           const _raffles = await Promise.all(raffles.map(async (sr) => {
             
-            const docTickets = await firebase.firestore().collection("tickets").where("raffleId", "==", sr.id).orderBy("number").startAt(startAt).limit(50).get();
+            const docTickets = await firebase.firestore().collection("tickets").where("raffleId", "==", sr.id).orderBy("number").startAt(startAt).limit(100).get();
             
             return { ...sr, tickets: [...sr.tickets, ...docTickets.docs.map((dt) => ({id: dt.id, ...dt.data()}) as TicketFirebase)] }
           }));
@@ -86,10 +90,10 @@ const Home: FC = () => {
   if(loading) return <FullLoader />;
 
   const onScrollTickets = async (e: any) => {
-    const bottom = parseInt((e.target.scrollHeight - e.target.scrollTop).toString()) > e.target.clientHeight -1;
+    const bottom = parseInt((e.target.scrollHeight - e.target.scrollTop).toString()) === e.target.clientHeight;
 
-    if (bottom && startAt < 50) { 
-      setStartAt(startAt + 50);
+    if (bottom) { 
+      setStartAt(startAt + 100);
     }
   }
 
@@ -177,24 +181,31 @@ const Home: FC = () => {
                     raffle.promotions.map((promotion: Promotion, index: number) => (
                       <Row key={index}>
                         <Col sm={20} xs={20} md={20}>
-                          <b>{index + 1}  {promotion.description}</b>
+                          <b>{promotion.description}</b>
                         </Col>
-                        <Col sm={4} xs={4} md={4}>
-                          <Switch  
-                            style={{color: "orangered"}}
-                            checked={promotionSelected.index === index && promotionSelected.checked} 
-                            onChange={(e) =>  {
-                              setRaffles(raffles.map(r => ({
-                                ...r,
-                                tickets: raffle.id === r.id 
-                                  ? r.tickets.map(t => ({...t, selected: false}))
-                                  : r.tickets  
-                              })));
-                              setIdsTicket([]);
-                              setPromotionSeleted({ index, checked: e.target.checked, countTickets: parseInt(promotion.countTickets.toString()) })
-                            }} 
-                          />
-                        </Col>
+                        {
+                          promotion.countTickets > 0 
+                          ?
+                          <Col sm={4} xs={4} md={4}>
+                           <Switch  
+                             style={{color: "orangered"}}
+                             checked={promotionSelected.index === index && promotionSelected.checked} 
+                             onChange={(e) =>  {
+                               setRaffles(raffles.map(r => ({
+                                 ...r,
+                                 tickets: raffle.id === r.id 
+                                   ? r.tickets.map(t => ({...t, selected: false}))
+                                   : r.tickets  
+                               })));
+                               setIdsTicket([]);
+                               setPromotionSeleted({ index, checked: e.target.checked, countTickets: parseInt(promotion.countTickets.toString()) })
+                             }} 
+                           />
+                         </Col>
+                         :
+                             null
+                        }
+                       
                         {index < raffle.promotions.length -1 && <Divider style={{margin: 0, padding: 0}}/> }
                       </Row>
                     ))
@@ -254,8 +265,11 @@ const Home: FC = () => {
                         borderRadius: 30,
                         width: 100
                       }}  
-                      onClick={() => {
-                        if(ticket.status !== "Libre") return;
+                      onClick={async () => {
+                        const docTicket = await serviceFirebase.getDoc("tickets", ticket.id);
+                        const _tiket = { id:docTicket.id, ...docTicket.data() } as TicketFirebase;
+
+                        if(ticket.status !== "Libre" || _tiket.status !== "Libre") return;
 
                         let _idsTicket = [...idsTicket];
 
@@ -279,7 +293,7 @@ const Home: FC = () => {
                   <Row style={{backgroundColor: "white", padding: 10, maxHeight: 300, overflowY: "auto"}} onScroll={onScrollTickets}>
                   {
                     raffle.tickets.map((ticket: TicketFirebase) => (
-                      <Col sm={4} xs={4} md={1} key={ticket.id} style={{padding: 5}}>
+                      <Col sm={4} xs={4} md={2} key={ticket.id} style={{padding: 5}}>
                         <div  
                           style={{ 
                             height: 30,
@@ -287,8 +301,11 @@ const Home: FC = () => {
                             backgroundColor: ticket.status === "Libre" ? "green" : "red",
                             borderRadius: 30
                           }}  
-                          onClick={() => {
-                            if(ticket.status !== "Libre") return;
+                          onClick={async () => {
+                            const docTicket = await serviceFirebase.getDoc("tickets", ticket.id);
+                            const _tiket = { id:docTicket.id, ...docTicket.data() } as TicketFirebase;
+    
+                            if(ticket.status !== "Libre" || _tiket.status !== "Libre") return;
 
                             let _idsTicket = [...idsTicket];
 
@@ -305,7 +322,7 @@ const Home: FC = () => {
                           }}
                         >
                           <div style={{paddingTop: 4}}>
-                          { idsTicket.includes(ticket.id) ? <CheckOutlined /> : ticket.number }
+                          { idsTicket.includes(ticket.id) ? <CheckOutlined /> : ticket.status === "Libre" ? ticket.number : "" }
                           </div>
                         </div> 
                       </Col>
@@ -358,8 +375,13 @@ const Home: FC = () => {
           }
 
           setOpen(!open);
+          setOpenInfo(true);
         }}
         idsTicket={idsTicket}
+      />
+      <HomeModalInfo 
+        open={openInfo}
+        onClose={() => setOpenInfo(false)}
       />
     </div>
   )

@@ -112,7 +112,7 @@ const HomeModal: FC<RafflesModalProps> = ({open, idsTicket, onClose}) => {
         form={form}
         layout="vertical"
       >
-        <Row>
+        <Row gutter={10}>
           <Col xs={24} sm={24} md={12}>
             <Form.Item
               label="Nombre"
@@ -122,7 +122,7 @@ const HomeModal: FC<RafflesModalProps> = ({open, idsTicket, onClose}) => {
               <Input value={formModal.name} onChange={(e) => setFormModal({...formModal, name: e.target.value})} />
             </Form.Item>
           </Col>
-          <Col xs={24} sm={24} md={12} style={{marginTop: -5, marginBottom: -28}}>
+          <Col xs={24} sm={24} md={12}>
             <Form.Item
               label="Teléfono"
               name="phone"

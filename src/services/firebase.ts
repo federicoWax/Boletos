@@ -5,6 +5,10 @@ class ServiceFirebase {
     return await firebase.firestore().collection(collection).get();
   }
 
+  async getDoc(collection: string, id: string) {
+    return await firebase.firestore().collection(collection).doc(id).get();
+  }
+
   async addWithRelation(collection: string, data: any, relationCollection: string, propRelation: string, dataSubCollection: any[]) {
     const ref = await firebase.firestore().collection(collection).add(data);
 
