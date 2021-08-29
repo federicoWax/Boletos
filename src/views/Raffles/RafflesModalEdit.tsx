@@ -1,36 +1,34 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { Modal, Row, Col, Form, Input, DatePicker, Typography, Button, message } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Promotion, Raffle, Ticket } from './interfaces';
+import { Promotion, RaffleEditFirebase } from './interfaces';
 import firebase from "../../firebase/firebase";
 import moment from 'moment';
 import ServiceFirebase from '../../services/firebase';
 
 const serviceFirebase = new ServiceFirebase();
+
 interface RafflesModalProps {
   open: boolean,
   onClose: Function,
+  raffleProp: RaffleEditFirebase | null
 }
 
-const INIT_RAFFLE = {
-  id: "",
-  name: "",
-  description: "",
-  finalDate: null,
-  promotions: [],
-  images: [],
-  image: null,
-  active: true,
-  priceTicket: 0,
-  countTickets: 0
-}
-
-const RafflesModal: FC<RafflesModalProps> = ({open, onClose}) => {
-  const [raffle, setRaffle] = useState<Raffle>(INIT_RAFFLE);
+const RafflesModalEdit: FC<RafflesModalProps> = ({open, onClose, raffleProp}) => {
+  const [raffle, setRaffle] = useState<RaffleEditFirebase | null>(raffleProp);
   const [saving, setSaving] = useState<boolean>(false);
   const [form] = Form.useForm();
 
-  const add = async () => {
+  useEffect(() => {
+    if(raffleProp) {
+      form.setFieldsValue(raffleProp);
+      setRaffle(raffleProp);
+    }
+  }, [raffleProp])
+
+  if(raffle === null) return null;
+
+  const update = async () => {
     if(!raffle.image) {
       message.error("Favor de seleccionar una Imagen para la Rifa");
       return;
@@ -42,51 +40,33 @@ const RafflesModal: FC<RafflesModalProps> = ({open, onClose}) => {
       setSaving(true);
 
       const _rafle = {...raffle};
-      const tickets: Ticket[] = [];
 
-      if(!_rafle.image) {
-        _rafle.image = {
-          imagePath: "",
-          imageUrl: "",
-        };
-      } else {
+      if(_rafle.image && _rafle.image instanceof File) {
         const path = "/carros";
-        const url = await serviceFirebase.uploadFirebase(path, _rafle.image as File);
+        const url = await serviceFirebase.uploadFirebase(path, _rafle.image);
 
         _rafle.image = {
           imagePath: path,
           imageUrl: url,
         };
       }
-      
-      for (let i = 0; i < _rafle.countTickets; i++) {
-        tickets.push({
-          buyer: "",
-          status: "Libre",
-          number: i + 1,
-          reservationDate: null,
-          phone: null
-        });
-      }
 
+      const id = _rafle.id;
+      
       delete _rafle.id; 
 
-      await serviceFirebase.addWithRelation("raffles", _rafle, "tickets", "raffleId", tickets);
+      await firebase.firestore().collection("raffles").doc(id).update(_rafle);
 
       message.success("Rifa guardada con exito");
     } catch (error) {
       console.log(error);
     } finally {
       setSaving(false);
-      form.resetFields();
-      setRaffle(INIT_RAFFLE);
       onClose();
     }
   }
 
-  const onCancel = async () => {
-    form.resetFields();
-    setRaffle(INIT_RAFFLE);
+  const onCancel = () => {
     onClose();
   }
 
@@ -94,11 +74,11 @@ const RafflesModal: FC<RafflesModalProps> = ({open, onClose}) => {
     <Modal  
       destroyOnClose={true}
       confirmLoading={saving}
-      title={"Agregar rifa"} 
+      title={"Editar rifa"} 
       visible={open} 
       onOk={() => 
         form.validateFields()
-        .then(add)
+        .then(update)
         .catch(() => {})
       } 
       onCancel={onCancel} 
@@ -125,33 +105,13 @@ const RafflesModal: FC<RafflesModalProps> = ({open, onClose}) => {
             </Form.Item>
           </Col>
           <Col xs={24} sm={24} md={6}>
-            <Form.Item
-              label="Fecha Cierre"
-              name="finalDate"
-              rules={[{ required: true, message: 'Favor de seleccionar la Fecha de Cierre' }]}
-            >
-              <DatePicker 
-                style={{width: "100%"}}
-                showTime 
-                placeholder="" 
-                onChange={(e) => setRaffle({...raffle, finalDate: e !== null ? firebase.firestore.Timestamp.fromDate(e.toDate()) : null }) }
-                value={raffle.finalDate === null ? raffle.finalDate : moment(raffle.finalDate?.toDate())}
-              />
-            </Form.Item>
-          </Col>
-          <Col xs={12} sm={12} md={12}>
-            <Form.Item
-              label="Cantidad de boletos"
-              name="countTickets"
-              rules={[{ required: true, message: 'Favor de escribir la Cantidad de boletos' }]}
-            >
-              <Input 
-                type="number" 
-                min="1"
-                value={raffle.countTickets} 
-                onChange={(e) => setRaffle({...raffle, countTickets: parseInt(e.target.value)}) }
-              />
-            </Form.Item>
+            <DatePicker 
+              style={{width: "100%", marginTop: 30}}
+              showTime 
+              placeholder="" 
+              onChange={(e) => setRaffle({...raffle, finalDate: e !== null ? firebase.firestore.Timestamp.fromDate(e.toDate()) : null }) }
+              value={moment(raffle.finalDate?.toDate())}
+            />
           </Col>
           <Col xs={12} sm={12} md={12}>
             <Form.Item
@@ -278,4 +238,4 @@ const RafflesModal: FC<RafflesModalProps> = ({open, onClose}) => {
   )
 }
 
-export default RafflesModal;
+export default RafflesModalEdit;

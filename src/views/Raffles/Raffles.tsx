@@ -1,40 +1,56 @@
 import { FC, useEffect, useState } from "react";
 import moment from "moment";
-import { Button, Table, Typography } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Button, Switch, Table, Typography } from 'antd';
+import { PlusOutlined, EditOutlined } from '@ant-design/icons';
 import RafflesModal from './RafflesModal';
-import { Raffle } from "./interfaces";
+import { Raffle, RaffleEditFirebase } from "./interfaces";
 import { Image } from "./interfaces";
 import firebase from "../../firebase/firebase";
-
-const columns = [
-  {
-    title: 'Nombre',
-    dataIndex: 'name',
-    key: 'name',
-  },
-  {
-    title: 'Descripción',
-    dataIndex: 'description',
-    key: 'description',
-  },
-  {
-    title: 'Fecha de cierre',
-    dataIndex: 'finalDate',
-    key: 'finalDate',
-    render: (finalDate: firebase.firestore.Timestamp) => <Typography.Text>{moment(finalDate.toDate()).format("DD/MM/YYYY hh:mm a")}</Typography.Text>,
-  },
-  {
-    title: 'Imagen principal',
-    dataIndex: 'image',
-    key: 'image',
-    render: (image: Image) => <img src={image.imageUrl} alt="imagenCarro" height={100} style={{ borderRadius: 30 }}/>,
-  },
-];
+import RafflesModalEdit from "./RafflesModalEdit";
 
 const Raffles: FC = () => {
   const [open, setOpen] = useState<boolean>(false);
+  const [raffle, setRaffle] = useState<RaffleEditFirebase | null>(null);
+  const [openEdit, setOpenEdit] = useState<boolean>(false);
   const [raffles, setRaffles] = useState<Raffle[]>([]);
+  const columns = [
+    {
+      title: 'Nombre',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: 'Descripción',
+      dataIndex: 'description',
+      key: 'description',
+    },
+    {
+      title: 'Fecha de cierre',
+      dataIndex: 'finalDate',
+      key: 'finalDate',
+      render: (finalDate: firebase.firestore.Timestamp) => <Typography.Text>{moment(finalDate.toDate()).format("DD/MM/YYYY hh:mm a")}</Typography.Text>,
+    },
+    {
+      title: 'Imagen principal',
+      dataIndex: 'image',
+      key: 'image',
+      render: (image: Image) => <img src={image.imageUrl} alt="imagenCarro" height={100} style={{ borderRadius: 30 }}/>,
+    },
+    {
+      title: 'Activa',
+      dataIndex: 'active',
+      key: 'edit',
+      render: (_: any, item: RaffleEditFirebase) => <Switch checked={item.active} onChange={async () => {
+        await firebase.firestore().collection("raffles").doc(item.id).update({active: !item.active});
+      }} />,
+    },
+    {
+      title: 'Editar',
+      dataIndex: 'edit',
+      key: 'edit',
+      render: (_: any, item: RaffleEditFirebase) => <EditOutlined onClick={() => { setOpenEdit(true); setRaffle(item); }} />,
+    },
+  ];
 
   useEffect(() => {
     let mounted = true;
@@ -57,16 +73,6 @@ const Raffles: FC = () => {
 
     return () => { mounted = false };
   }, []);
-
-/*   if(loading) return <div style={{
-      position: "absolute",
-      left: "50%",
-      top: "50%",
-      WebkitTransform: "translate(-50%, -50%)",
-      transform: "translate(-50%, -50%)",
-    }}>    
-      <Spin tip="Cargando..." />
-    </div> */
 
   return (
     <div style={{ padding: 30 }}>
@@ -92,6 +98,11 @@ const Raffles: FC = () => {
       <RafflesModal 
         open={open}  
         onClose={() => setOpen(false)}
+      />
+      <RafflesModalEdit 
+        open={openEdit}
+        onClose={() => setOpenEdit(false)}
+        raffleProp={raffle}
       />
     </div>
   )

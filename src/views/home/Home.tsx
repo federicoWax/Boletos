@@ -36,7 +36,7 @@ const Home: FC = () => {
   const [openInfo, setOpenInfo] = useState<boolean>(false)
   
   useFirestoreConnect(() => [
-    { collection: 'raffles', where: [["finalDate", ">", nowFirebase]] }
+    { collection: 'raffles', where: [["finalDate", ">", nowFirebase], ["acitve", "==", true]] }
   ]);
   const selectorRaffles = useSelector((state: RootState) => state.firestore.ordered.raffles) as RaffleFirebase[];
 
