@@ -1,8 +1,8 @@
 import { FC, useEffect, useState } from 'react';
 import Switch from '@material-ui/core/Switch';
 import Box from '@material-ui/core/Box';
-import { Col, Row, Input, Divider, Avatar, message, Button } from 'antd';
-import { CheckOutlined, WhatsAppOutlined, CaretDownOutlined, SearchOutlined } from '@ant-design/icons';
+import { Col, Row, Input, Avatar, message, Button } from 'antd';
+import { CheckOutlined, WhatsAppOutlined, CaretDownOutlined, SearchOutlined, MenuOutlined } from '@ant-design/icons';
 import { useFirestoreConnect } from 'react-redux-firebase';
 import { useSelector } from 'react-redux';
 import logoLogin from '../../assets/login.jpg';
@@ -14,6 +14,9 @@ import 'moment/locale/es';
 import FullLoader from '../../components/FullLoader/FullLoader';
 import ServiceFirebase from '../../services/firebase';
 import HomeModalInfo from './HomeModalInfo';
+import { Drawer, List, Divider, ListItem, ListItemText } from '@material-ui/core';
+import { MdHelp, MdList } from 'react-icons/md';
+import { useHistory } from 'react-router';
 
 const serviceFirebase = new ServiceFirebase();
 const nowFirebase = firebase.firestore.Timestamp.now();
@@ -33,10 +36,12 @@ const Home: FC = () => {
   const [startAt, setStartAt] = useState<number>(1);
   const [idsTicket, setIdsTicket] = useState<Array<string>>([]);
   const [ticket, setTikcet] = useState<TicketFirebase | null>(null);
-  const [openInfo, setOpenInfo] = useState<boolean>(false)
+  const [openInfo, setOpenInfo] = useState<boolean>(false);
+  const [openDrawer, setOpenDrawer] = useState<boolean>(false);
+  const history = useHistory();
   
   useFirestoreConnect(() => [
-    { collection: 'raffles', where: [["finalDate", ">", nowFirebase], ["acitve", "==", true]] }
+    { collection: 'raffles', where: [["finalDate", ">", nowFirebase], ["active", "==", true]] }
   ]);
   const selectorRaffles = useSelector((state: RootState) => state.firestore.ordered.raffles) as RaffleFirebase[];
 
@@ -119,6 +124,21 @@ const Home: FC = () => {
   
   return (
     <div style={{color: "white", backgroundColor: "orangered", textAlign: "center"}}>
+      <Drawer anchor="left" open={openDrawer} onClose={() => setOpenDrawer(false)}>
+        <img alt="rifas-login" height={110} style={{objectFit: "cover"}} src={logoLogin}/>
+        <List>
+          <ListItem button key={"/lista"} onClick={() => history.push("/lista")}>
+            <MdList style={{color: "orangered", marginRight: 10, fontSize: 20}} />
+            <ListItemText primary="Lista" />
+          </ListItem>
+          <Divider />
+          <ListItem button key={"/preguntas"} onClick={() => history.push("/preguntas")}>
+            <MdHelp style={{color: "orangered", marginRight: 10, fontSize: 20}} />
+            <ListItemText primary="Preguntas" />
+          </ListItem>
+          <Divider />
+        </List>
+      </Drawer>
       <div style={{
         textAlign: "center", 
         width: "100%", 
@@ -126,8 +146,10 @@ const Home: FC = () => {
         position: "fixed", 
         zIndex: 999,
         height: 65,
+        paddingRight: 32
       }}>
         <img alt="rifas-login" height={60} src={logoLogin}/>
+        <MenuOutlined onClick={() => setOpenDrawer(true)} style={{color: "white", float: "left", paddingLeft: 20, paddingTop: 15, fontSize: 30}} />
       </div>
       <div style={{paddingTop: 60}}>
       {
@@ -357,7 +379,7 @@ const Home: FC = () => {
       </a>
       <HomeModal 
         open={open}
-        onClose={(_idsTicket: Array<string> | undefined) => {
+        onClose={(_idsTicket: Array<string> | undefined, showInfo: boolean) => {
           if(_idsTicket) {
             const idRaffle = (raffles.find(r => r.tickets.some(t => _idsTicket.includes(t.id))))?.id;
 
@@ -375,7 +397,8 @@ const Home: FC = () => {
           }
 
           setOpen(!open);
-          setOpenInfo(true);
+          
+          if(showInfo) setOpenInfo(true);
         }}
         idsTicket={idsTicket}
       />

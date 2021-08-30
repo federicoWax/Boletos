@@ -8,14 +8,16 @@ import { Layout } from 'antd';
 import LayoutComponent from '../components/Layout/Layout';
 import Raffles from '../views/Raffles/Raffles';
 import Tickets from '../views/tickets/tickets';
+import Questions from '../views/questions/Questions';
 
 const privateRoutes: string[] = [
-  "/rifas"
+  "/rifas",
+  "/boletos"
 ]; 
 
 const publicRoutes: string[] = [
   "/login"
-]
+];
 
 const Routes: FC = () => {
   const { user } = useAuth();
@@ -34,6 +36,7 @@ const Routes: FC = () => {
                 <Route exact path="/lista" component={Home} />
                 <Route exact path="/rifas" component={Raffles} />
                 <Route exact path="/boletos" component={Tickets} />
+                <Route exact path="/preguntas" component={Questions} />
               </Switch>
             </Layout.Content>
           <Footer />

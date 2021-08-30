@@ -53,7 +53,7 @@ const Tickets: FC = () => {
       </Typography.Text>,
     },
     {
-      title: 'Resibo',
+      title: 'Recibo',
       dataIndex: 'payInfo',
       key: 'payInfo', 
       render: (_: any, item: TicketFirebase) =>  item.status === "Pagado" && <AlignLeftOutlined onClick={() => { setTicket(item); setOpenInfo(true); }} />

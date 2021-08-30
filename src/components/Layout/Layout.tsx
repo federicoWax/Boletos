@@ -19,9 +19,12 @@ const LayoutComponent: FC = () => {
 
   const onCollapse = (collapsed: boolean | undefined) => setCollapsed(collapsed);
   
-  const signOut = async () => await firebase.auth().signOut();
+  const signOut = async () => {
+    await firebase.auth().signOut();
+    history.push("/login");
+  }
 
-  if(!user && ["/lista", "/login"].includes(location.pathname)) return null;
+  if(!user && ["/lista", "/login", "/preguntas"].includes(location.pathname)) return null;
   
   return (
     <Sider collapsible collapsed={collapsed} onCollapse={onCollapse}>

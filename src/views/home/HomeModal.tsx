@@ -39,7 +39,7 @@ const HomeModal: FC<RafflesModalProps> = ({open, idsTicket, onClose}) => {
       setTimeout(() => {
         setMessage("");
       }, 4000)
-      onClose(idsTicket);  
+      onClose(idsTicket, true);  
     } catch (error) { 
       console.log(error);
     } finally {
@@ -64,7 +64,6 @@ const HomeModal: FC<RafflesModalProps> = ({open, idsTicket, onClose}) => {
           })
       } 
       confirmLoading={saving}
-      
     > 
       <div style={{textAlign: "center", fontWeight: "bold" }}>
         <div style={{color: "red", fontSize: 20}}>Lea esta nota porfavor!!</div>

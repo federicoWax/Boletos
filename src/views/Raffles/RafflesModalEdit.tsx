@@ -24,7 +24,7 @@ const RafflesModalEdit: FC<RafflesModalProps> = ({open, onClose, raffleProp}) =>
       form.setFieldsValue(raffleProp);
       setRaffle(raffleProp);
     }
-  }, [raffleProp])
+  }, [raffleProp, form])
 
   if(raffle === null) return null;
 

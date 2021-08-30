@@ -40,13 +40,13 @@ const TicketsModal: FC<PropsTicketsModal> = ({open, onClose, ticket}) => {
         </Row>
         <Divider />
         <Row gutter={20} style={{marginTop: 20}}>
-          <Col xs={5} sm={5} md={5}>SORTEO: </Col> <Col xs={19} sm={19} md={19} style={{color: "red"}}>{ ticket.raffle.name.toUpperCase() + "(" + ticket.raffle.description + ")"}</Col>
+          <Col xs={8} sm={8} md={8}>SORTEO: </Col> <Col xs={16} sm={16} md={16} style={{color: "red"}}>{ ticket.raffle.name.toUpperCase() + "(" + ticket.raffle.description + ")"}</Col>
         </Row> 
         <Row gutter={20} style={{marginTop: 20}}>
           <Col>NOMBRE: </Col> <Col style={{color: "red"}}>{ ticket.buyer.toUpperCase()}</Col>
         </Row> 
         <Row gutter={20} style={{marginTop: 20}}>
-          <Col>Pagado: </Col> <Col style={{color: "red"}}>SI</Col>
+          <Col>PAGADO: </Col> <Col style={{color: "red"}}>SI</Col>
         </Row> 
         <Row gutter={20} style={{marginTop: 20}}>
           <Col>FECHA DE COMPRA: </Col> <Col style={{color: "red"}}>{ moment(ticket.reservationDate?.toDate()).format("DD/MM/YYYY hh:mm:ss a") }</Col>
@@ -56,7 +56,7 @@ const TicketsModal: FC<PropsTicketsModal> = ({open, onClose, ticket}) => {
               alt="rifas-login" 
               height={120} 
               style={{ padding: 10,  borderRadius: "25%"}} 
-              src={ ticket.raffle.image instanceof File || ticket.raffle.image === null || ticket.raffle.image == undefined ? "" : ticket?.raffle?.image?.imageUrl}
+              src={ ticket.raffle.image instanceof File || ticket.raffle.image === null || ticket.raffle.image === undefined ? "" : ticket?.raffle?.image?.imageUrl}
             /> 
           </div>
       </div>
