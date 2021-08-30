@@ -3,6 +3,43 @@ import { Col, Form, Input, Modal, Row } from 'antd';
 import ServiceFirebase from '../../services/firebase';
 import firebase from '../../firebase/firebase';
 import AlertC from '../../components/Alert/Alert';
+import { Select } from 'antd';
+
+const { Option } = Select;
+const states = [
+  'Aguascalientes',
+  'Baja California',
+  'Baja California Sur',
+	'Campeche',
+	'Chiapas',
+	'Chihuahua',
+	'Coahuila de Zaragoza',
+	'Colima',
+	'Ciudad de México',
+	'Durango',
+	'Guanajuato',
+	'Guerrero',
+	'Hidalgo',
+	'Jalisco',
+	'Estado de Mexico',
+	'Michoacan de Ocampo',
+	'Morelos',
+	'Nayarit',
+	'Nuevo Leon',
+	'Oaxaca',
+	'Puebla',
+	'Queretaro de Arteaga',
+	'Quintana Roo',
+	'San Luis Potosi',
+	'Sinaloa',
+  'Sonora',
+	'Tabasco',
+	'Tamaulipas',
+	'Tlaxcala',
+	'Veracruz de Ignacio de la Llave',
+	'Yucatan',
+	'Zacatecas',
+];
 
 const serviceFirebase = new ServiceFirebase();
 
@@ -13,12 +50,13 @@ interface RafflesModalProps {
 }
   
 interface FormModal {
-  name: string,
-  phone: number | string
+  buyer: string,
+  phone: number | string,
+  state: string | undefined;
 }
 
 const HomeModal: FC<RafflesModalProps> = ({open, idsTicket, onClose}) => {
-  const [formModal, setFormModal] = useState<FormModal>({name: "", phone: ""}); 
+  const [formModal, setFormModal] = useState<FormModal>({buyer: "", phone: "", state: ""}); 
   const [saving, setSaving] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
   const [form] = Form.useForm();
@@ -32,7 +70,7 @@ const HomeModal: FC<RafflesModalProps> = ({open, idsTicket, onClose}) => {
       const reservationDate = firebase.firestore.Timestamp.now();
 
       await Promise.all(idsTicket.map((id) => 
-        serviceFirebase.updateDoc("tickets", id, { buyer: formModal.name, phone: formModal.phone, status: "Reservado", reservationDate })
+        serviceFirebase.updateDoc("tickets", id, { status: "Reservado", reservationDate, ...formModal })
       ));
 
       setMessage("Reserva realizada con exito!");
@@ -106,6 +144,9 @@ const HomeModal: FC<RafflesModalProps> = ({open, idsTicket, onClose}) => {
         <div>
           José Salvador Palafox Villegas
         </div>
+        <div>
+          (SI EL PAGO SERA CON TRANSEFERENCIA FAVOR DE PONER COMO CONCEPTO EL NÚMERO DEL BOLETO Y NOMBRE)
+        </div>
       </div>
       <Form 
         form={form}
@@ -118,7 +159,7 @@ const HomeModal: FC<RafflesModalProps> = ({open, idsTicket, onClose}) => {
               name="name"
               rules={[{ required: true, message: 'Favor de escribir el Nombre' }]}
             >
-              <Input value={formModal.name} onChange={(e) => setFormModal({...formModal, name: e.target.value})} />
+              <Input value={formModal.buyer} onChange={(e) => setFormModal({...formModal, buyer: e.target.value})} />
             </Form.Item>
           </Col>
           <Col xs={24} sm={24} md={12}>
@@ -128,6 +169,21 @@ const HomeModal: FC<RafflesModalProps> = ({open, idsTicket, onClose}) => {
               rules={[{ required: true, message: 'Favor de escribir el Teléfono' }]}
             >
               <Input type="number" value={formModal.phone} onChange={(e) => setFormModal({...formModal, phone: e.target.value})} />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={24} md={12}>
+            <Form.Item
+              label="Estado"
+              name="state"
+              rules={[{ required: true, message: 'Favor de seleccioanr el Estado' }]}
+            >
+              <Select onChange={(value) => setFormModal({...formModal, state: value?.toString()})}>
+              {
+                states.map((state) => (
+                  <Option value={state} key={state}>{state}</Option>
+                ))                
+              }
+              </Select>
             </Form.Item>
           </Col>
         </Row>

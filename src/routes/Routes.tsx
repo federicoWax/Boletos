@@ -35,7 +35,7 @@ const Routes: FC = () => {
                 <Route exact path="/login" component={Login} />
                 <Route exact path="/lista" component={Home} />
                 <Route exact path="/rifas" component={Raffles} />
-                <Route exact path="/boletos" component={Tickets} />
+                <Route exact path="/boletos/:raffleId" component={Tickets} />
                 <Route exact path="/preguntas" component={Questions} />
               </Switch>
             </Layout.Content>

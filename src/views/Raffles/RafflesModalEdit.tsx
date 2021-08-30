@@ -149,7 +149,7 @@ const RafflesModalEdit: FC<RafflesModalProps> = ({open, onClose, raffleProp}) =>
                 <Button 
                   icon={<PlusOutlined />} 
                   type="primary"
-                  onClick={() => setRaffle({...raffle, promotions: [...raffle.promotions, { description: "", discount: 0, countTickets: 0 }] })} 
+                  onClick={() => setRaffle({...raffle, promotions: [...raffle.promotions, { description: "", price: 0, countTickets: 0 }] })} 
                 />
               </Col>
               <Col xs={24} sm={24} md={24}>
@@ -184,10 +184,10 @@ const RafflesModalEdit: FC<RafflesModalProps> = ({open, onClose, raffleProp}) =>
                             setRaffle({
                               ...raffle, 
                               promotions: raffle.promotions
-                                .map((p, i) => ({...p, discount: i === index ? e.target.value ? parseFloat(e.target.value) : e.target.value : p.discount}))
+                                .map((p, i) => ({...p, price: i === index ? e.target.value ? parseFloat(e.target.value) : e.target.value : p.price}))
                             })
                           }
-                          value={promotion.discount} 
+                          value={promotion.price} 
                           type="number" 
                           min="1" 
                         />

@@ -7,19 +7,24 @@ import moment from 'moment';
 import { OrderByOptions, useFirestoreConnect, WhereOptions } from 'react-redux-firebase';
 import { useSelector } from 'react-redux';
 import TicketsModal from './TicketsModal';
+import { RouteComponentProps } from 'react-router-dom';
 
 const { Option } = Select;
 
-const Tickets: FC = () => {
+interface MatchParams {
+  raffleId: string;
+}
+
+const Tickets: FC<RouteComponentProps<MatchParams>> = ({match}) => {
   const [ticket, setTicket] = useState<TicketFirebase | null>(null);
   const [search, setSearch] = useState<string>("");
   const [openInfo, setOpenInfo] = useState<boolean>(false);
   const [tickets, setTickets] = useState<TicketFirebase[]>([]);
   const [ticketsSearch, setTicketsSearch] = useState<TicketFirebase[] | null>(null);
-  const [startAt, setStartAt] = useState(1);
-  const [where, setWhere] = useState<WhereOptions[]>([["number", ">", 0]]);
+  const [where, setWhere] = useState<WhereOptions[]>([["number", ">", 0], ["raffleId", "==", match.params.raffleId]]);
   const [orderBy, setOrderBy] = useState<OrderByOptions>(['number', 'asc']);
-  useFirestoreConnect(() => [{ collection: 'tickets', where: where,  orderBy: orderBy, startAt: startAt, limit: 20 }]);
+  const [startAt, setStartAt] = useState(1);
+  useFirestoreConnect(() => [{ collection: 'tickets', where: where,  orderBy: orderBy, startAt: startAt, limit: 10 }]);
   const selectorTickets = useSelector((state: RootState) => state.firestore.ordered.tickets) as TicketFirebase[];
 
   const columns = [
@@ -27,7 +32,7 @@ const Tickets: FC = () => {
       title: 'Sorteo',
       dataIndex: 'raffle',
       key: 'raffle',
-      render: (raffle: RaffleFirebase) => raffle.name
+      render: (raffle: RaffleFirebase) => raffle?.name
     },
     {
       title: 'Numero',
@@ -88,10 +93,11 @@ const Tickets: FC = () => {
       const getData = async () => {
         const _tickes = await Promise.all(selectorTickets.map(async (ticket) => {
           const raffle = await firebase.firestore().collection("raffles").doc(ticket.raffleId).get();
+
           return {...ticket, raffle: { id: raffle.id, ...raffle.data() } as RaffleFirebase }
         }));
 
-        setTickets([...tickets, ..._tickes]);
+        setTickets(_tickes);
       }
 
       getData();
@@ -106,33 +112,33 @@ const Tickets: FC = () => {
 
       setWhere([
       ["reservationDate", "!=", null], 
-      ["reservationDate", "<", firebase.firestore.Timestamp.fromDate(new Date(moment().add(-1, "days").toDate())) ]] as WhereOptions[]);
+      ["reservationDate", "<", firebase.firestore.Timestamp.fromDate(new Date(moment().add(-1, "days").toDate()))],
+      ["raffleId", "==", match.params.raffleId]
+    ]);
     } else {
       setOrderBy(['number', 'asc']);
       setWhere(
         value 
-        ? [["status",  "==" , value]] as WhereOptions []
-        : [["number", ">", 0]] as WhereOptions []
+        ? [["status",  "==" , value], ["raffleId", "==", match.params.raffleId]]
+        : [["number", ">", 0], ["raffleId", "==", match.params.raffleId]]
       )
-    }
-  }
-
-  const onScrollTable = (e: any) => {
-    const bottom = parseInt((e.target.scrollHeight - e.target.scrollTop).toString()) === e.target.clientHeight;
-
-    if (bottom) { 
-      setStartAt(startAt + 20);
     }
   }
 
   const onSearch = async () => {
     const docsTickes = await firebase.firestore().collection("tickets").where("number", "==", parseInt(search)).get();
 
-    setTicketsSearch(docsTickes.docs.map(t => ({id: t.id, ...t.data()}) as TicketFirebase));
+    const _tickes = await Promise.all(docsTickes.docs.map(async (ticket) => {
+      const raffle = await firebase.firestore().collection("raffles").doc(ticket.data().raffleId).get();
+
+      return { id:ticket.id, ...ticket.data(), raffle: { id: raffle.id, ...raffle.data() } as RaffleFirebase } as TicketFirebase
+    }));
+
+    setTicketsSearch(_tickes);
   }
 
   return (
-    <div style={{marginTop: 20, padding: 20, maxHeight: 800}}>
+    <div style={{marginTop: 20, padding: 20}}>
       Filtro de tickets
       <br />
       <Select defaultValue="Todos" placeholder="Filtrar por" style={{width: 120}} onChange={onChangeFilter}>
@@ -167,15 +173,24 @@ const Tickets: FC = () => {
             pagination={false}
           />
         :
-        <div onScroll={onScrollTable} style={{overflowY: "auto", overflowX: "hidden", maxHeight: 600}}>
           <Table 
             rowKey="id" 
             dataSource={tickets} 
             columns={columns} 
             style={{overflowX: "auto", marginTop: 20}}
-            pagination={false}
+            pagination={{
+              total: 5000,
+              pageSize: 10,
+              onChange: (page) => {
+                if(page === 1) {
+                  setStartAt(page);
+                } else {
+                  let _startAt = (page -1).toString();
+                  setStartAt(parseInt(_startAt + "0"))
+                }
+              }
+            }}
           />
-        </div>  
       }
       <TicketsModal 
         open={openInfo} 

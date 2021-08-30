@@ -33,7 +33,6 @@ const Home: FC = () => {
   const [search, setSearch] = useState<string>(""); 
   const [loading, setLoading] = useState<boolean>(true); 
   const [open, setOpen] = useState<boolean>(false); 
-  const [startAt, setStartAt] = useState<number>(1);
   const [idsTicket, setIdsTicket] = useState<Array<string>>([]);
   const [ticket, setTikcet] = useState<TicketFirebase | null>(null);
   const [openInfo, setOpenInfo] = useState<boolean>(false);
@@ -50,7 +49,7 @@ const Home: FC = () => {
       const getData = async () => {
         try {
           const _raffles = await Promise.all(selectorRaffles.map(async (sr) => {
-            const docTickets = await firebase.firestore().collection("tickets").where("raffleId", "==", sr.id).orderBy("number").startAt(1).limit(100).get();
+            const docTickets = await firebase.firestore().collection("tickets").where("raffleId", "==", sr.id).orderBy("number").get();
             
             return { ...sr, tickets: docTickets.docs.map((dt) => ({id: dt.id, selected: false, ...dt.data()}) as TicketFirebase) }
           }));
@@ -67,60 +66,11 @@ const Home: FC = () => {
     }
   }, [selectorRaffles]);
 
-  useEffect(() => {
-    if(startAt > 1) {
-      const getData = async () => {
-        try {
-          if(raffles[0].tickets.length >= 5000) return;
-
-          const _raffles = await Promise.all(raffles.map(async (sr) => {
-            
-            const docTickets = await firebase.firestore().collection("tickets").where("raffleId", "==", sr.id).orderBy("number").startAt(startAt).limit(100).get();
-            
-            return { ...sr, tickets: [...sr.tickets, ...docTickets.docs.map((dt) => ({id: dt.id, ...dt.data()}) as TicketFirebase)] }
-          }));
-    
-          setRaffles(_raffles);  
-        } catch (error) {
-          console.log(error);
-        } finally {
-          setLoading(false);
-        }
-      }
-      getData();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startAt]);
 
   if(loading) return <FullLoader />;
 
-  const onScrollTickets = async (e: any) => {
-    const bottom = parseInt((e.target.scrollHeight - e.target.scrollTop).toString()) === e.target.clientHeight;
-
-    if (bottom) { 
-      setStartAt(startAt + 100);
-    }
-  }
-
-  const searchTicket = async (raffle: RaffleFirebase) => {
-    try {
-      const docTicket = await firebase.firestore().collection("tickets")
-        .where("raffleId", "==", raffle.id)
-        .where("number", "==", parseInt(search))
-        .get();
-
-      if(docTicket.empty) {
-        message.error("Boleto no encontrado");
-        return;
-      }
-
-      setTikcet(
-        docTicket.docs.map((doc) => ({id: doc.id, ...doc.data()}))[0] as TicketFirebase
-      )
-    } catch (error) {
-      console.log(error);
-    }
-  }
+  const getTickets = (tikets: TicketFirebase[] = []) => 
+    tikets.filter(ticket => ticket.number.toString().includes(search));
   
   return (
     <div style={{color: "white", backgroundColor: "orangered", textAlign: "center"}}>
@@ -190,9 +140,11 @@ const Home: FC = () => {
                 <div>
                   Precio Boleto: ${ raffle.priceTicket.toString().toUpperCase() }
                 </div>
-                <div style={{marginTop: -10}}>
+                {
+                  raffle.activeDate && <div style={{marginTop: -10}}>
                   (SÓLO HASTA { moment(raffle.finalDate?.toDate()).format("DD/MMMM").toUpperCase() })
-                </div>
+                  </div>
+                }
               </div>
               {
                 raffle.promotions.length
@@ -237,25 +189,12 @@ const Home: FC = () => {
                   null
               }
               <div style={{padding: 20}}>
-                <Row gutter={20} style={{marginTop: -10, marginBottom: -15}}>
-                  <Col xs={20} sm={20} md={20}>
-                    <Input
-                      value={search} 
-                      type="number" 
-                      placeholder="Busca tu boleto aqui" 
-                      onChange={(e) => {
-                        if(!e.target.value) {
-                          setTikcet(null);
-                        }
-
-                        setSearch(e.target.value);
-                      }}
-                    />
-                  </Col>
-                  <Col xs={4} sm={4} md={4} >
-                    <Button icon={<SearchOutlined />} onClick={async () => await searchTicket(raffle)} />
-                  </Col>
-                </Row>
+                <Input
+                  value={search} 
+                  type="number" 
+                  placeholder="Busca tu boleto aqui" 
+                  onChange={(e) => { setSearch(e.target.value) }}
+                />
               </div>
               <Box display="flex" justifyContent="center" style={{width: "100%", marginBottom: 10, marginTop: 5}}>
                 <Box pr={1}>
@@ -274,18 +213,16 @@ const Home: FC = () => {
                   <b>Verde - Libre</b>
                 </Box>
               </Box>
+              <Row style={{backgroundColor: "white", padding: 10}}>
               {
-                ticket
-                ?
-                  <div style={{padding: 10, display: "inline-block"}}>
+                getTickets(raffle.tickets).map((ticket: TicketFirebase) => (
+                  <Col sm={4} xs={4} md={2} key={ticket.id} style={{padding: 5}}>
                     <div  
                       style={{ 
-                        textAlign:"center",
                         height: 30,
                         cursor: "pointer", 
                         backgroundColor: ticket.status === "Libre" ? "green" : "red",
-                        borderRadius: 30,
-                        width: 100
+                        borderRadius: 30
                       }}  
                       onClick={async () => {
                         const docTicket = await serviceFirebase.getDoc("tickets", ticket.id);
@@ -297,65 +234,28 @@ const Home: FC = () => {
 
                         if(!idsTicket.includes(ticket.id)) {
                           _idsTicket = [..._idsTicket, ticket.id];
+                          setIdsTicket(_idsTicket);
                         } else {
                           setIdsTicket(idsTicket.filter(it => it !== ticket.id));
                         }
-                        
-                        if(!promotionSelected.checked || promotionSelected.countTickets === _idsTicket.length) {
+
+                        if(!promotionSelected.checked  || promotionSelected.countTickets === _idsTicket.length) {
                           setOpen(true);
                         }
                       }}
                     >
                       <div style={{paddingTop: 4}}>
-                      { idsTicket.includes(ticket.id) ? <CheckOutlined /> : ticket.number }
+                      { idsTicket.includes(ticket.id) ? <CheckOutlined /> : ticket.status === "Libre" ? ticket.number : "" }
                       </div>
                     </div> 
-                  </div>
-                :
-                  <Row style={{backgroundColor: "white", padding: 10, maxHeight: 300, overflowY: "auto"}} onScroll={onScrollTickets}>
-                  {
-                    raffle.tickets.map((ticket: TicketFirebase) => (
-                      <Col sm={4} xs={4} md={2} key={ticket.id} style={{padding: 5}}>
-                        <div  
-                          style={{ 
-                            height: 30,
-                            cursor: "pointer", 
-                            backgroundColor: ticket.status === "Libre" ? "green" : "red",
-                            borderRadius: 30
-                          }}  
-                          onClick={async () => {
-                            const docTicket = await serviceFirebase.getDoc("tickets", ticket.id);
-                            const _tiket = { id:docTicket.id, ...docTicket.data() } as TicketFirebase;
-    
-                            if(ticket.status !== "Libre" || _tiket.status !== "Libre") return;
-
-                            let _idsTicket = [...idsTicket];
-
-                            if(!idsTicket.includes(ticket.id)) {
-                              _idsTicket = [..._idsTicket, ticket.id];
-                              setIdsTicket(_idsTicket);
-                            } else {
-                              setIdsTicket(idsTicket.filter(it => it !== ticket.id));
-                            }
-
-                            if(!promotionSelected.checked  || promotionSelected.countTickets === _idsTicket.length) {
-                              setOpen(true);
-                            }
-                          }}
-                        >
-                          <div style={{paddingTop: 4}}>
-                          { idsTicket.includes(ticket.id) ? <CheckOutlined /> : ticket.status === "Libre" ? ticket.number : "" }
-                          </div>
-                        </div> 
-                      </Col>
-                    ))
-                  }
-                  </Row>
+                  </Col>
+                ))
               }
+              </Row>
             </div>
           ))
         :
-          <div style={{textAlign: "center", marginTop: 250}}> Sin Rifas Registradas </div>
+          <div style={{textAlign: "center", marginTop: 300, fontSize: 20, backgroundColor: "orangered"}}> Sin Rifas Registradas </div>
       }
       </div>
       <a

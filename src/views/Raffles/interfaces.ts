@@ -2,7 +2,7 @@ import firebase from "../../firebase/firebase";
 
 export interface Promotion {
   description: string;
-  discount: number | string;
+  price: number | string;
   countTickets: number | string;
 }
   
@@ -11,7 +11,8 @@ export interface Ticket {
   buyer: string;
   status: string;
   reservationDate: firebase.firestore.Timestamp | null;
-  phone: number | null
+  phone: number | null;
+  state: string;
 }
 
 export interface TicketFirebase {
@@ -23,7 +24,8 @@ export interface TicketFirebase {
   phone: number | null;
   raffleId: string;
   selected: boolean;
-  raffle: RaffleFirebase
+  raffle: RaffleFirebase;
+  state: string
 }
 export interface Image {
   imageUrl: string;
@@ -41,6 +43,7 @@ export interface Raffle {
   active: boolean;
   priceTicket: number;
   countTickets: number | string;
+  activeDate: boolean;
 }
 
 export interface RaffleFirebase {
@@ -55,6 +58,7 @@ export interface RaffleFirebase {
   priceTicket: number;
   countTickets: number | string;
   tickets: TicketFirebase[];
+  activeDate: boolean;
 }
 
 export interface RaffleEditFirebase {
@@ -67,4 +71,5 @@ export interface RaffleEditFirebase {
   image: Image | File | null | undefined;
   active: boolean;
   priceTicket: number;
+  activeDate: boolean;
 }

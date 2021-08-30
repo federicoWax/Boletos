@@ -36,14 +36,17 @@ const TicketsModal: FC<PropsTicketsModal> = ({open, onClose, ticket}) => {
       <Divider style={{marginTop: 20}} />
       <div style={{fontSize: 20}}>
         <Row gutter={20}>
-          <Col>BOLETOS: </Col> <Col style={{color: "red"}}>{ ticket?.number } - {ticket?.number + 5000}</Col>
+          <Col>BOLETO: </Col> <Col style={{color: "red"}}>{ ticket?.number } - {ticket?.number + 5000}</Col>
         </Row>
         <Divider />
         <Row gutter={20} style={{marginTop: 20}}>
-          <Col xs={8} sm={8} md={8}>SORTEO: </Col> <Col xs={16} sm={16} md={16} style={{color: "red"}}>{ ticket.raffle.name.toUpperCase() + "(" + ticket.raffle.description + ")"}</Col>
+          <Col xs={8} sm={8} md={8}>SORTEO: </Col> <Col xs={16} sm={16} md={16} style={{color: "red"}}>{ ticket.raffle?.name.toUpperCase() + "(" + ticket.raffle.description.toUpperCase() + ")"}</Col>
         </Row> 
         <Row gutter={20} style={{marginTop: 20}}>
           <Col>NOMBRE: </Col> <Col style={{color: "red"}}>{ ticket.buyer.toUpperCase()}</Col>
+        </Row> 
+        <Row gutter={20} style={{marginTop: 20}}>
+          <Col>ESTADO: </Col> <Col style={{color: "red"}}>{ ticket.state?.toUpperCase()}</Col>
         </Row> 
         <Row gutter={20} style={{marginTop: 20}}>
           <Col>PAGADO: </Col> <Col style={{color: "red"}}>SI</Col>

@@ -57,7 +57,7 @@ const Questions: FC = () => {
       <div style={{paddingLeft: 20, paddingRight: 20, textAlign: "center"}}>
         <div>
           Todos nuestros sorteos se realizan en base a la <a href="https://www.lotenal.gob.mx/Comercial/index.html">Lotería Nacional para la Asistencia Pública mexicana.</a>
-          El ganador de Sorteos Salazar será el participante cuyo boleto coincida con las últimas cuatro cifras del 
+          El ganador de Rifas Herson será el participante cuyo boleto coincida con las últimas cuatro cifras del 
           primer premio ganador de la Lotería Nacional (las fechas serán publicadas en nuestra página oficial).
         </div>
         <div 
@@ -83,7 +83,7 @@ const Questions: FC = () => {
           ¿DÓNDE SE PUBLICA A LOS GANADORES?
         </div>
         <div>
-          En nuestra página oficial de Facebook <a href="https://www.facebook.com/rifashersonn/">Sorteos Salazar</a> puedes encontrar todos y cada uno de nuestros sorteos anteriores,
+          En nuestra página oficial de Facebook <a href="https://www.facebook.com/rifashersonn/">Rifas Herson</a> puedes encontrar todos y cada uno de nuestros sorteos anteriores,
           así como las transmisiones en vivo con Lotería Nacional y las entregas de premios a los ganadores!
         </div>
         <div><b>Envíanos preguntas a</b></div>

@@ -7,8 +7,11 @@ import { Raffle, RaffleEditFirebase } from "./interfaces";
 import { Image } from "./interfaces";
 import firebase from "../../firebase/firebase";
 import RafflesModalEdit from "./RafflesModalEdit";
+import { MdConfirmationNumber } from 'react-icons/md';
+import { useHistory } from "react-router";
 
 const Raffles: FC = () => {
+  const history = useHistory();
   const [open, setOpen] = useState<boolean>(false);
   const [raffle, setRaffle] = useState<RaffleEditFirebase | null>(null);
   const [openEdit, setOpenEdit] = useState<boolean>(false);
@@ -41,8 +44,22 @@ const Raffles: FC = () => {
       dataIndex: 'active',
       key: 'edit',
       render: (_: any, item: RaffleEditFirebase) => <Switch checked={item.active} onChange={async () => {
-        await firebase.firestore().collection("raffles").doc(item.id).update({active: !item.active});
+        await firebase.firestore().collection("raffles").doc(item.id).update({active: !item.activeDate});
       }} />,
+    },
+    {
+      title: 'Fecha activa',
+      dataIndex: 'activeDate',
+      key: 'edit',
+      render: (_: any, item: RaffleEditFirebase) => <Switch checked={item.activeDate} onChange={async () => {
+        await firebase.firestore().collection("raffles").doc(item.id).update({activeDate: !item.activeDate});
+      }} />,
+    },
+    {
+      title: 'Boletos',
+      dataIndex: 'activeDate',
+      key: 'edit',
+      render: (_: any, item: RaffleEditFirebase) => <MdConfirmationNumber onClick={() => history.push("/boletos/" + item.id)} />
     },
     {
       title: 'Editar',
