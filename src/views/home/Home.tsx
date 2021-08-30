@@ -1,13 +1,13 @@
 import { FC, useEffect, useState } from 'react';
 import Switch from '@material-ui/core/Switch';
 import Box from '@material-ui/core/Box';
-import { Col, Row, Input, Avatar, message, Button } from 'antd';
-import { CheckOutlined, WhatsAppOutlined, CaretDownOutlined, SearchOutlined, MenuOutlined } from '@ant-design/icons';
+import { Col, Row, Input, Avatar } from 'antd';
+import { CheckOutlined, WhatsAppOutlined, CaretDownOutlined, MenuOutlined } from '@ant-design/icons';
 import { useFirestoreConnect } from 'react-redux-firebase';
 import { useSelector } from 'react-redux';
 import logoLogin from '../../assets/login.jpg';
 import firebase, { RootState } from "../../firebase/firebase";
-import { Image, Promotion, RaffleFirebase, TicketFirebase } from '../Raffles/interfaces';
+import { Image, Promotion, RaffleFirebase, TicketFirebase } from '../raffles/interfaces';
 import HomeModal from './HomeModal';
 import moment from 'moment';
 import 'moment/locale/es';
@@ -20,7 +20,6 @@ import { useHistory } from 'react-router';
 
 const serviceFirebase = new ServiceFirebase();
 const nowFirebase = firebase.firestore.Timestamp.now();
-
 interface SelectedPromotion {
   index: number | null;
   checked: boolean,
@@ -34,7 +33,6 @@ const Home: FC = () => {
   const [loading, setLoading] = useState<boolean>(true); 
   const [open, setOpen] = useState<boolean>(false); 
   const [idsTicket, setIdsTicket] = useState<Array<string>>([]);
-  const [ticket, setTikcet] = useState<TicketFirebase | null>(null);
   const [openInfo, setOpenInfo] = useState<boolean>(false);
   const [openDrawer, setOpenDrawer] = useState<boolean>(false);
   const history = useHistory();
@@ -215,7 +213,10 @@ const Home: FC = () => {
               </Box>
               <Row style={{backgroundColor: "white", padding: 10}}>
               {
-                getTickets(raffle.tickets).map((ticket: TicketFirebase) => (
+                getTickets(raffle.tickets).map((ticket: TicketFirebase) => {
+                  const key = ticket.number.toString().length;
+                  
+                  return (
                   <Col sm={4} xs={4} md={2} key={ticket.id} style={{padding: 5}}>
                     <div  
                       style={{ 
@@ -228,12 +229,15 @@ const Home: FC = () => {
                         const docTicket = await serviceFirebase.getDoc("tickets", ticket.id);
                         const _tiket = { id:docTicket.id, ...docTicket.data() } as TicketFirebase;
 
+
+
                         if(ticket.status !== "Libre" || _tiket.status !== "Libre") return;
 
                         let _idsTicket = [...idsTicket];
 
                         if(!idsTicket.includes(ticket.id)) {
                           _idsTicket = [..._idsTicket, ticket.id];
+
                           setIdsTicket(_idsTicket);
                         } else {
                           setIdsTicket(idsTicket.filter(it => it !== ticket.id));
@@ -245,11 +249,11 @@ const Home: FC = () => {
                       }}
                     >
                       <div style={{paddingTop: 4}}>
-                      { idsTicket.includes(ticket.id) ? <CheckOutlined /> : ticket.status === "Libre" ? ticket.number : "" }
+                      { idsTicket.includes(ticket.id) ? <CheckOutlined /> : ticket.status === "Libre" ? (ticket.number.toString().padStart(4, "0")) : "" }
                       </div>
                     </div> 
                   </Col>
-                ))
+                ) })
               }
               </Row>
             </div>
@@ -290,7 +294,6 @@ const Home: FC = () => {
                 : r.tickets  
             })));
             setIdsTicket([]);
-            setTikcet(null);
             setSearch("");
           } else {
             setIdsTicket([]);

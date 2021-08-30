@@ -4,7 +4,7 @@ import Modal from 'antd/lib/modal/Modal'
 import moment from 'moment';
 import { FC } from 'react'
 import logoLogin from '../../assets/login.jpg';
-import { TicketFirebase } from '../Raffles/interfaces';
+import { TicketFirebase } from '../raffles/interfaces';
 
 interface PropsTicketsModal {
   open: boolean;
@@ -36,7 +36,7 @@ const TicketsModal: FC<PropsTicketsModal> = ({open, onClose, ticket}) => {
       <Divider style={{marginTop: 20}} />
       <div style={{fontSize: 20}}>
         <Row gutter={20}>
-          <Col>BOLETO: </Col> <Col style={{color: "red"}}>{ ticket?.number } - {ticket?.number + 5000}</Col>
+          <Col>BOLETO: </Col> <Col style={{color: "red"}}>{ ticket?.number.toString().padStart(4, "0") } - {ticket?.number + 5000}</Col>
         </Row>
         <Divider />
         <Row gutter={20} style={{marginTop: 20}}>

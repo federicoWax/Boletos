@@ -2,7 +2,7 @@ import { FC, useEffect, useState } from 'react';
 import { AlignLeftOutlined } from '@ant-design/icons';
 import { Input, Select, Table, Typography } from 'antd';
 import firebase, { RootState } from '../../firebase/firebase';
-import { RaffleFirebase, TicketFirebase } from '../Raffles/interfaces';
+import { RaffleFirebase, TicketFirebase } from '../raffles/interfaces';
 import moment from 'moment';
 import { OrderByOptions, useFirestoreConnect, WhereOptions } from 'react-redux-firebase';
 import { useSelector } from 'react-redux';
