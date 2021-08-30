@@ -202,7 +202,7 @@ const Home: FC = () => {
                   {
                     raffle.promotions.map((promotion: Promotion, index: number) => (
                       <Row key={index}>
-                        <Col sm={20} xs={20} md={20}>
+                        <Col sm={promotion.countTickets > 0 ? 20 : 24} xs={promotion.countTickets > 0 ? 20 : 24} md={promotion.countTickets > 0 ? 20 : 24}>
                           <b>{promotion.description}</b>
                         </Col>
                         {
