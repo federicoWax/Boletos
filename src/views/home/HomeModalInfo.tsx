@@ -31,7 +31,7 @@ const HomeModalInfo: FC<PropsHomeModalInfo> = ({open, onClose, tickets = []}) =>
         </div>
       </div>
       <div style={{textAlign: "center", fontSize: 18, fontWeight: "bold"}}>
-        Boletos recervados: 
+        Boletos reservados: 
       </div>
 
       <Row style={{backgroundColor: "white", padding: 10}} justify="center">

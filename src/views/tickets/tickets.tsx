@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react';
-import { AlignLeftOutlined } from '@ant-design/icons';
+import { AlignLeftOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { Button, Input, Row, Col, message } from 'antd';
 import firebase, { RootState } from '../../firebase/firebase';
 import { RaffleFirebase, TicketFirebase } from '../raffles/interfaces';
@@ -18,6 +18,7 @@ import Paper from '@material-ui/core/Paper';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import FullLoader from '../../components/FullLoader/FullLoader';
+import TicketsModalBuy from './TicketsModalBuy';
 
 interface MatchParams {
   raffleId: string;
@@ -25,6 +26,7 @@ interface MatchParams {
 
 const Tickets: FC<RouteComponentProps<MatchParams>> = ({match}) => {
   const [releasing, setReleasing] = useState(false);
+  const [openBuyModal, setOpenBuyModal] = useState(false);
   const [filter, setFilter] = useState("0");
   const [ticket, setTicket] = useState<TicketFirebase | null>(null);
   const [search, setSearch] = useState<string>("");
@@ -90,7 +92,7 @@ const Tickets: FC<RouteComponentProps<MatchParams>> = ({match}) => {
   }
 
   const onScroll = (e: any) => {
-    const bottom = parseInt((e.target.scrollHeight - e.target.scrollTop).toString()) === e.target.clientHeight;
+    const bottom = (e.target.scrollHeight - e.target.scrollTop) < (e.target.clientHeight + 1);
 
     if (bottom && limit < 5000) { 
       setLimit(limit + 50)
@@ -173,6 +175,7 @@ const Tickets: FC<RouteComponentProps<MatchParams>> = ({match}) => {
               <TableCell><b>Reserva</b></TableCell>
               <TableCell><b>Estado</b></TableCell>
               <TableCell><b>Recibo</b></TableCell>
+              <TableCell><b>Comprar</b></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -235,6 +238,9 @@ const Tickets: FC<RouteComponentProps<MatchParams>> = ({match}) => {
                 <TableCell>
                   { row.status === "Pagado" && <AlignLeftOutlined onClick={() => { setTicket(row); setOpenInfo(true); }} /> }
                 </TableCell>
+                <TableCell>
+                  <ShoppingCartOutlined onClick={() => { setTicket(row); setOpenBuyModal(true); }} />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -244,6 +250,24 @@ const Tickets: FC<RouteComponentProps<MatchParams>> = ({match}) => {
         open={openInfo} 
         onClose={() => setOpenInfo(false)} 
         ticket={ticket}
+      />
+      <TicketsModalBuy 
+        open={openBuyModal}
+        onClose={(saved: boolean, dataBuyer: any) => {
+
+          if(saved) {
+            setTickets(t =>
+              t.map(t => (
+                t?.id === ticket?.id 
+                  ? {...t, status: "Pagado", reservationDate: dataBuyer.reservationDate, buyer: dataBuyer.buyer, phone: dataBuyer.phone, state: dataBuyer.state }
+                  : t
+              )) as TicketFirebase[]
+            );
+          }
+          setOpenBuyModal(false);
+          setTicket(null);
+        }}
+        idTicket={ticket?.id}
       />
     </div>
   )

@@ -1,17 +1,21 @@
 import { FC, useEffect, useState } from "react";
 import moment from "moment";
-import { Button, Switch, Table, Typography } from 'antd';
-import { PlusOutlined, EditOutlined } from '@ant-design/icons';
+import { Button, Switch, Table, Typography, Modal, message } from 'antd';
+import { PlusOutlined, EditOutlined, ExclamationCircleOutlined, DeleteOutlined } from '@ant-design/icons';
 import RafflesModal from './RafflesModal';
-import { Raffle, RaffleEditFirebase, Image } from "./interfaces";
+import { Raffle, RaffleEditFirebase, Image, RaffleFirebase } from "./interfaces";
 import firebase from "../../firebase/firebase";
 import RafflesModalEdit from "./RafflesModalEdit";
 import { MdConfirmationNumber } from 'react-icons/md';
 import { useHistory } from "react-router";
 
+const { confirm } = Modal;
+
 const Raffles: FC = () => {
   const history = useHistory();
   const [open, setOpen] = useState<boolean>(false);
+  const [openDelete, setOpenDelete] = useState<boolean>(false);
+  const [deleting, setDeleting] = useState<boolean>(false);
   const [raffle, setRaffle] = useState<RaffleEditFirebase | null>(null);
   const [openEdit, setOpenEdit] = useState<boolean>(false);
   const [raffles, setRaffles] = useState<Raffle[]>([]);
@@ -66,6 +70,12 @@ const Raffles: FC = () => {
       key: 'edit',
       render: (_: any, item: RaffleEditFirebase) => <EditOutlined onClick={() => { setOpenEdit(true); setRaffle(item); }} />,
     },
+    {
+      title: 'Eliminar',
+      dataIndex: 'delete',
+      key: 'delete',
+      render: (_: any, item: RaffleEditFirebase) => <DeleteOutlined onClick={() => { setOpenDelete(true); showConfirm(item); }} />,
+    },
   ];
 
   useEffect(() => {
@@ -89,6 +99,39 @@ const Raffles: FC = () => {
 
     return () => { mounted = false };
   }, []);
+
+  
+  function showConfirm(raffle: RaffleEditFirebase) {
+
+    confirm({
+      visible: openDelete,
+      title: '¿Seguro que desea borrar este Rifa?',
+      icon: <ExclamationCircleOutlined />,
+      content: 'Some descriptions',
+      okText: "Aceptar",
+      cancelText: "Cancelar",
+      async onOk() {
+        if(deleting) return;
+
+        try {
+          setDeleting(true);
+
+          const tickets = await firebase.firestore().collection("tickets").where("raffleId", "==", raffle.id).get();
+
+          await Promise.all(tickets.docs.map(doc => firebase.firestore().collection("tickets").doc(doc.id).delete()));
+
+          await firebase.firestore().collection("raffles").doc(raffle.id).delete();
+
+          message.success("Rifa eliminada con exito");
+        } catch (error) {
+          console.log(error);
+        } finally {
+          setDeleting(false);
+          setOpenDelete(false);
+        }
+      },
+    });
+  }
 
   return (
     <div style={{ padding: 30 }}>
