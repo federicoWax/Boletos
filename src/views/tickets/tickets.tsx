@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from 'react';
 import { AlignLeftOutlined } from '@ant-design/icons';
-import { Input, Select, Table, Typography } from 'antd';
+import { Button, Input, Row, Col, message } from 'antd';
 import firebase, { RootState } from '../../firebase/firebase';
 import { RaffleFirebase, TicketFirebase } from '../raffles/interfaces';
 import moment from 'moment';
@@ -8,190 +8,238 @@ import { OrderByOptions, useFirestoreConnect, WhereOptions } from 'react-redux-f
 import { useSelector } from 'react-redux';
 import TicketsModal from './TicketsModal';
 import { RouteComponentProps } from 'react-router-dom';
-
-const { Option } = Select;
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableContainer from '@material-ui/core/TableContainer';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import Paper from '@material-ui/core/Paper';
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
+import FullLoader from '../../components/FullLoader/FullLoader';
 
 interface MatchParams {
   raffleId: string;
 }
 
 const Tickets: FC<RouteComponentProps<MatchParams>> = ({match}) => {
+  const [releasing, setReleasing] = useState(false);
+  const [filter, setFilter] = useState("0");
   const [ticket, setTicket] = useState<TicketFirebase | null>(null);
   const [search, setSearch] = useState<string>("");
   const [openInfo, setOpenInfo] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [tickets, setTickets] = useState<TicketFirebase[]>([]);
-  const [ticketsSearch, setTicketsSearch] = useState<TicketFirebase[] | null>(null);
-  const [where, setWhere] = useState<WhereOptions[]>([["number", ">", 0], ["raffleId", "==", match.params.raffleId]]);
+  const [where, setWhere] = useState<WhereOptions[]>([["raffleId", "==", match.params.raffleId]]);
   const [orderBy, setOrderBy] = useState<OrderByOptions>(['number', 'asc']);
   const [startAt, setStartAt] = useState(1);
-  useFirestoreConnect(() => [{ collection: 'tickets', where: where,  orderBy: orderBy, startAt: startAt, limit: 10 }]);
+  useFirestoreConnect(() => [{ collection: 'tickets', where: where,  orderBy: orderBy, startAt: startAt, limit: 5000 }]);
   const selectorTickets = useSelector((state: RootState) => state.firestore.ordered.tickets) as TicketFirebase[];
-
-  const columns = [
-    {
-      title: 'Sorteo',
-      dataIndex: 'raffle',
-      key: 'raffle',
-      render: (raffle: RaffleFirebase) => raffle?.name
-    },
-    {
-      title: 'Numero',
-      dataIndex: 'number',
-      key: 'number',
-    },
-    {
-      title: 'Comprador',
-      dataIndex: 'buyer',
-      key: 'buyer',
-    },
-    {
-      title: 'Teléfono',
-      dataIndex: 'phone',
-      key: 'phone',
-    },
-    {
-      title: 'Fecha de reserva',
-      dataIndex: 'reservationDate',
-      key: 'reservationDate',
-      render: (reservationDate: firebase.firestore.Timestamp | null) => <Typography.Text>
-        { reservationDate ? moment(reservationDate.toDate()).format("DD/MM/YYYY hh:mm a") : "Sin reserva" }
-      </Typography.Text>,
-    },
-    {
-      title: 'Recibo',
-      dataIndex: 'payInfo',
-      key: 'payInfo', 
-      render: (_: any, item: TicketFirebase) =>  item.status === "Pagado" && <AlignLeftOutlined onClick={() => { setTicket(item); setOpenInfo(true); }} />
-    },
-    {
-      title: 'Estatus',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string, item: TicketFirebase) => {
-        const now = moment();
-        const diff = item.reservationDate && item.status !== "Pagado" ? now.diff(moment(item.reservationDate.toDate()), "days") : null;
-  
-        return <Select value={diff ? "Vencido" : status} style={{width: 200}} onChange={async (value: string) => {
-          try {
-            await firebase.firestore().collection("tickets").doc(item.id)
-              .update(value === "Libre" ? { status: value, reservationDate: null, buyer: "", phone: null } : {status: value} );
-          } catch (error) { 
-            console.log(error);
-          }
-        }}>
-          <Option value="Libre">Libre</Option>
-          <Option value="Reservado" disabled>Reservado</Option>
-          <Option value="Vencido" disabled style={{color: "red"}}>Vencido</Option>
-          <Option value="Pagado" disabled={item.status === "Libre"}>Pagado</Option>
-        </Select>
-      },
-    }, 
-  ];
+  const [limit, setLimit] = useState<number>(50);
+  const [raffle, setRaffle] = useState<RaffleFirebase | null>(null)
 
   useEffect(() => {
-    if(selectorTickets) {
-      const getData = async () => {
-        const _tickes = await Promise.all(selectorTickets.map(async (ticket) => {
-          const raffle = await firebase.firestore().collection("raffles").doc(ticket.raffleId).get();
+    if(match.params.raffleId) {
+      const getRaffle = async () => {
+        const docRaffle = await firebase.firestore().collection("raffles").doc(match.params.raffleId).get();
 
-          return {...ticket, raffle: { id: raffle.id, ...raffle.data() } as RaffleFirebase }
-        }));
-
-        setTickets(_tickes);
+        setRaffle({id: docRaffle.id, ...docRaffle.data()} as RaffleFirebase);
       }
 
-      getData();
+      getRaffle();
     }
-  }, [selectorTickets]);
+  }, [match]);
 
-  const onChangeFilter = (value: string) => {
-    setTickets([]);
+  useEffect(() => {
+    if(selectorTickets && raffle !== null && loading) {
+      try {
+        const now = moment();
 
-    if(value === "Vencidos") {
-      setOrderBy(['reservationDate', 'asc']);
+        setTickets(selectorTickets.map((ticket) => {
+          const diff = ticket.reservationDate && ticket.status !== "Pagado" ? now.diff(moment(ticket.reservationDate.toDate()), "days") : null;
+  
+          return diff 
+            ? 
+            {
+              ...ticket,
+              status: "Vencido",
+              raffle
+            }
+            : {...ticket, raffle};
+        }));
+      } catch (error) {
+        console.log(error);
+      } finally { 
+        setLoading(false);
+      }
+    }
+  }, [selectorTickets, raffle, loading]);
 
-      setWhere([
-      ["reservationDate", "!=", null], 
-      ["reservationDate", "<", firebase.firestore.Timestamp.fromDate(new Date(moment().add(-1, "days").toDate()))],
-      ["raffleId", "==", match.params.raffleId]
-    ]);
-    } else {
-      setOrderBy(['number', 'asc']);
-      setWhere(
-        value 
-        ? [["status",  "==" , value], ["raffleId", "==", match.params.raffleId]]
-        : [["number", ">", 0], ["raffleId", "==", match.params.raffleId]]
-      )
+  if(loading) return <FullLoader />
+
+  const onChangeFilter = (value: any) => {
+    setFilter(value);
+  }
+
+  const getTickets = (tickets: TicketFirebase[]) => {
+    if(filter === "0") return tickets.filter(ticket => ticket.number.toString().includes(search) || ticket.buyer.toString().includes(search));
+
+    return tickets.filter(ticket => ticket.status === filter)
+      .filter(ticket => ticket.number.toString().includes(search) || ticket.buyer.toString().includes(search));
+  }
+
+  const onScroll = (e: any) => {
+    const bottom = parseInt((e.target.scrollHeight - e.target.scrollTop).toString()) === e.target.clientHeight;
+
+    if (bottom && limit < 5000) { 
+      setLimit(limit + 50)
     }
   }
 
-  const onSearch = async () => {
-    const docsTickes = await firebase.firestore().collection("tickets").where("number", "==", parseInt(search)).get();
+  const releaseTickets = async () => {
+    if(releasing) return;
 
-    const _tickes = await Promise.all(docsTickes.docs.map(async (ticket) => {
-      const raffle = await firebase.firestore().collection("raffles").doc(ticket.data().raffleId).get();
+    try {
+      setReleasing(false);
 
-      return { id:ticket.id, ...ticket.data(), raffle: { id: raffle.id, ...raffle.data() } as RaffleFirebase } as TicketFirebase
-    }));
+      await Promise.all(tickets.filter(_ticket => _ticket.status === "Vencido").map(_ticket => {
+        return firebase.firestore().collection("tickets").doc(_ticket.id)
+          .update({ status: "Libre", reservationDate: null, buyer: "", phone: null, state: "" })
+      }));
 
-    setTicketsSearch(_tickes);
+      setTickets(
+        tickets.map(t => (
+          t.status === "Vencido" 
+          ? {...t, status: "Libre", reservationDate: null, buyer: "", phone: null, state: ""} 
+          : t
+      )));
+
+      message.success("Boletos liberados con exito");
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setReleasing(false)
+    }
   }
 
   return (
     <div style={{marginTop: 20, padding: 20}}>
       Filtro de tickets
       <br />
-      <Select defaultValue="Todos" placeholder="Filtrar por" style={{width: 120}} onChange={onChangeFilter}>
-        <Option value={0}>Todos</Option>
-        <Option value="Libre">Libres</Option>
-        <Option value="Reservado">Reservados</Option>
-        <Option value="Vencidos">Vencidos</Option>
-        <Option value="Pagado">Pagados</Option>
-      </Select>
+      <Row>
+        <Col>
+          <Select value={filter} placeholder="Filtrar por" style={{width: 120, marginRight: 10}} onChange={(e) => onChangeFilter(e.target.value)}>
+            <MenuItem value={"0"}>Todos</MenuItem>
+            <MenuItem value="Libre">Libres</MenuItem>
+            <MenuItem value="Reservado">Reservados</MenuItem>
+            <MenuItem value="Vencido">Vencidos</MenuItem>
+            <MenuItem value="Pagado">Pagados</MenuItem>
+          </Select>
+        </Col>
+        <Col>
+          <div>Total de boletos: {" " + getTickets(tickets).length}</div>
+        </Col>
+      </Row>
+      {
+        filter === "Vencido" && <Button 
+          loading={releasing}
+          type="primary"
+          style={{marginTop: 10}}
+          onClick={releaseTickets}
+          >
+          Liberar boletos vencidos
+        </Button>
+      }
+     
       <br />
       <br />
-      <Input.Search 
-        enterButton 
-        onSearch={onSearch} 
+      <Input 
         onChange={e => {
-          if(!e.target.value) {
-            setTicketsSearch(null);
-          }
-          
           setSearch(e.target.value) 
         }}
-        placeholder="Buscar por número" 
+        placeholder="Buscar por número o comprador" 
       />
-      {
-        search && ticketsSearch !== null
-        ?
-          <Table 
-            rowKey="id" 
-            dataSource={ticketsSearch} 
-            columns={columns} 
-            style={{overflowX: "auto", marginTop: 20}}
-            pagination={false}
-          />
-        :
-          <Table 
-            rowKey="id" 
-            dataSource={tickets} 
-            columns={columns} 
-            style={{overflowX: "auto", marginTop: 20}}
-            pagination={{
-              total: 5000,
-              pageSize: 10,
-              onChange: (page) => {
-                if(page === 1) {
-                  setStartAt(page);
-                } else {
-                  let _startAt = (page -1).toString();
-                  setStartAt(parseInt(_startAt + "0"))
+      <br />
+      <br />
+      <TableContainer component={Paper} style={{maxHeight: 500}} onScroll={onScroll}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell><b>Número</b></TableCell>
+              <TableCell><b>Comprador</b></TableCell>
+              <TableCell><b>Teléfono</b></TableCell>
+              <TableCell><b>Estado</b></TableCell>
+              <TableCell><b>Reserva</b></TableCell>
+              <TableCell><b>Estado</b></TableCell>
+              <TableCell><b>Recibo</b></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {getTickets(tickets).slice(0, limit).map((row: TicketFirebase) => (
+              <TableRow key={row?.id}>
+                <TableCell component="th" scope="row">
+                  {row.number.toString().padStart(4, "0")}
+                </TableCell>
+                <TableCell component="th" scope="row">
+                  {row.buyer}
+                </TableCell>
+                <TableCell component="th" scope="row">
+                  {row.phone}
+                </TableCell>
+                <TableCell component="th" scope="row">
+                  {row.state}
+                </TableCell>
+                <TableCell component="th" scope="row">
+                  { row.reservationDate ? moment(row.reservationDate.toDate()).format("DD/MM/YYYY hh:mm a") : "Sin reserva" }
+                </TableCell>
+                <TableCell component="th" scope="row">
+                {
+                  <Select error={row.status === "Vencido"} style={{width: 200}} value={row.status} onChange={async (e) => {
+                    const { value } = e.target;
+
+                    if(value === undefined || value === null) return;
+
+                    try {
+                      if(value === "Libre") {
+                        setTickets(t =>
+                          t.map(t => (
+                            t?.id === row?.id 
+                              ? {...t, status: value, reservationDate: null, buyer: "", phone: null, state: "" }
+                              : t
+                          )) as TicketFirebase[]
+                        );
+                      } else {
+                        setTickets(t =>
+                          t.map(t => (
+                            t?.id === row?.id 
+                              ? {...t, status: value }
+                              : t
+                          )) as TicketFirebase[]
+                        );
+                      }
+
+                      await firebase.firestore().collection("tickets").doc(row.id)
+                        .update(value === "Libre" ? { status: value, reservationDate: null, buyer: "", phone: null, state: "" } : {status: value} );
+                    } catch (error) { 
+                      console.log(error);
+                    }
+                  }}>
+                    <MenuItem value="Libre">Libre</MenuItem>
+                    <MenuItem value="Reservado" disabled>Reservado</MenuItem>
+                    <MenuItem value="Vencido" disabled style={{color: "red"}}>Vencido</MenuItem>
+                    <MenuItem value="Pagado" disabled={row.status === "Libre"}>Pagado</MenuItem>
+                  </Select>
                 }
-              }
-            }}
-          />
-      }
+                </TableCell>
+                <TableCell>
+                  { row.status === "Pagado" && <AlignLeftOutlined onClick={() => { setTicket(row); setOpenInfo(true); }} /> }
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
       <TicketsModal 
         open={openInfo} 
         onClose={() => setOpenInfo(false)} 

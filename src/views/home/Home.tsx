@@ -36,7 +36,8 @@ const Home: FC = () => {
   const [openInfo, setOpenInfo] = useState<boolean>(false);
   const [openDrawer, setOpenDrawer] = useState<boolean>(false);
   const history = useHistory();
-  
+  const [tickets, setTickets] = useState<TicketFirebase[]>([]);
+
   useFirestoreConnect(() => [
     { collection: 'raffles', where: [["finalDate", ">", nowFirebase], ["active", "==", true]] }
   ]);
@@ -213,10 +214,7 @@ const Home: FC = () => {
               </Box>
               <Row style={{backgroundColor: "white", padding: 10}}>
               {
-                getTickets(raffle.tickets).map((ticket: TicketFirebase) => {
-                  const key = ticket.number.toString().length;
-                  
-                  return (
+                getTickets(raffle.tickets).map((ticket: TicketFirebase) => (
                   <Col sm={4} xs={4} md={2} key={ticket.id} style={{padding: 5}}>
                     <div  
                       style={{ 
@@ -229,8 +227,6 @@ const Home: FC = () => {
                         const docTicket = await serviceFirebase.getDoc("tickets", ticket.id);
                         const _tiket = { id:docTicket.id, ...docTicket.data() } as TicketFirebase;
 
-
-
                         if(ticket.status !== "Libre" || _tiket.status !== "Libre") return;
 
                         let _idsTicket = [...idsTicket];
@@ -239,11 +235,14 @@ const Home: FC = () => {
                           _idsTicket = [..._idsTicket, ticket.id];
 
                           setIdsTicket(_idsTicket);
+                          setTickets([...tickets, ticket]);
+
                         } else {
                           setIdsTicket(idsTicket.filter(it => it !== ticket.id));
+                          setTickets(tickets.filter(t => t.id !== ticket.id));
                         }
 
-                        if(!promotionSelected.checked  || promotionSelected.countTickets === _idsTicket.length) {
+                        if(!promotionSelected.checked || promotionSelected.countTickets === _idsTicket.length) {
                           setOpen(true);
                         }
                       }}
@@ -253,7 +252,7 @@ const Home: FC = () => {
                       </div>
                     </div> 
                   </Col>
-                ) })
+                ))
               }
               </Row>
             </div>
@@ -293,11 +292,8 @@ const Home: FC = () => {
                 ? r.tickets.map(t => ({...t, status: _idsTicket.includes(t.id) ? "Reservado" : t.status}))
                 : r.tickets  
             })));
-            setIdsTicket([]);
             setSearch("");
-          } else {
-            setIdsTicket([]);
-          }
+          } 
 
           setOpen(!open);
           
@@ -306,8 +302,13 @@ const Home: FC = () => {
         idsTicket={idsTicket}
       />
       <HomeModalInfo 
+        tickets={tickets}
         open={openInfo}
-        onClose={() => setOpenInfo(false)}
+        onClose={() => {
+          setOpenInfo(false)
+          setIdsTicket([]);
+          setTickets([]);
+        }} 
       />
     </div>
   )
