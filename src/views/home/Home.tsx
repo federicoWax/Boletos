@@ -3,10 +3,8 @@ import Switch from '@material-ui/core/Switch';
 import Box from '@material-ui/core/Box';
 import { Col, Row, Input, Avatar } from 'antd';
 import { CheckOutlined, WhatsAppOutlined, CaretDownOutlined, MenuOutlined } from '@ant-design/icons';
-import { useFirestoreConnect } from 'react-redux-firebase';
-import { useSelector } from 'react-redux';
 import logoLogin from '../../assets/login.jpg';
-import firebase, { RootState } from "../../firebase/firebase";
+import firebase from "../../firebase/firebase";
 import { Image, Promotion, RaffleFirebase, TicketFirebase } from '../raffles/interfaces';
 import HomeModal from './HomeModal';
 import moment from 'moment';
@@ -38,33 +36,29 @@ const Home: FC = () => {
   const history = useHistory();
   const [tickets, setTickets] = useState<TicketFirebase[]>([]);
 
-  useFirestoreConnect(() => [
-    { collection: 'raffles', where: [["finalDate", ">", nowFirebase], ["active", "==", true]] }
-  ]);
-  const selectorRaffles = useSelector((state: RootState) => state.firestore.ordered.raffles) as RaffleFirebase[];
-
   useEffect(() => {
-    if(selectorRaffles) {
-      const getData = async () => {
-        try {
-          const _raffles = await Promise.all(selectorRaffles.map(async (sr) => {
-            const docTickets = await firebase.firestore().collection("tickets").where("raffleId", "==", sr.id).orderBy("number").get();
-            
-            return { ...sr, tickets: docTickets.docs.map((dt) => ({id: dt.id, selected: false, ...dt.data()}) as TicketFirebase) }
-          }));
+    const getData = async () => {
+      try {
+        const rafflesDocs = await firebase.firestore().collection("raffles").where("finalDate", ">", nowFirebase).where("active", "==", true).get();
 
-          setRaffles(_raffles);  
-        } catch (error) {
-          console.log(error);
-        } finally {
-          setLoading(false);
-        }
+        let _raffles = rafflesDocs.docs.map(raffleDoc => ({id: raffleDoc.id, ...raffleDoc.data()})) as RaffleFirebase[];
+
+        _raffles = await Promise.all(_raffles.map(async (sr) => {
+          const docTickets = await firebase.firestore().collection("tickets").where("raffleId", "==", sr.id).orderBy("number").get();
+          
+          return { ...sr, tickets: docTickets.docs.map((dt) => ({id: dt.id, selected: false, ...dt.data()}) as TicketFirebase) }
+        }));
+
+        setRaffles(_raffles);  
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoading(false);
       }
-      
-      getData();
     }
-  }, [selectorRaffles]);
-
+    
+    getData();
+  }, []);
 
   if(loading) return <FullLoader />;
 

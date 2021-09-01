@@ -33,9 +33,9 @@ const Tickets: FC<RouteComponentProps<MatchParams>> = ({match}) => {
   const [openInfo, setOpenInfo] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [tickets, setTickets] = useState<TicketFirebase[]>([]);
-  const [where, setWhere] = useState<WhereOptions[]>([["raffleId", "==", match.params.raffleId]]);
-  const [orderBy, setOrderBy] = useState<OrderByOptions>(['number', 'asc']);
-  const [startAt, setStartAt] = useState(1);
+  const [where] = useState<WhereOptions[]>([["raffleId", "==", match.params.raffleId]]);
+  const [orderBy] = useState<OrderByOptions>(['number', 'asc']);
+  const [startAt] = useState(1);
   useFirestoreConnect(() => [{ collection: 'tickets', where: where,  orderBy: orderBy, startAt: startAt, limit: 5000 }]);
   const selectorTickets = useSelector((state: RootState) => state.firestore.ordered.tickets) as TicketFirebase[];
   const [limit, setLimit] = useState<number>(50);

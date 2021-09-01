@@ -3,7 +3,7 @@ import moment from "moment";
 import { Button, Switch, Table, Typography, Modal, message } from 'antd';
 import { PlusOutlined, EditOutlined, ExclamationCircleOutlined, DeleteOutlined } from '@ant-design/icons';
 import RafflesModal from './RafflesModal';
-import { Raffle, RaffleEditFirebase, Image, RaffleFirebase } from "./interfaces";
+import { Raffle, RaffleEditFirebase, Image } from "./interfaces";
 import firebase from "../../firebase/firebase";
 import RafflesModalEdit from "./RafflesModalEdit";
 import { MdConfirmationNumber } from 'react-icons/md';
