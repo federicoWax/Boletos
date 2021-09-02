@@ -3,9 +3,8 @@ import { Col, Form, Input, Modal, Row } from 'antd';
 import ServiceFirebase from '../../services/firebase';
 import firebase from '../../firebase/firebase';
 import AlertC from '../../components/Alert/Alert';
-import { Select } from 'antd';
+import { MenuItem, Select } from '@material-ui/core';
 
-const { Option } = Select;
 const states = [
   'Aguascalientes',
   'Baja California',
@@ -56,7 +55,7 @@ interface FormModal {
 }
 
 const HomeModal: FC<RafflesModalProps> = ({open, idsTicket, onClose}) => {
-  const [formModal, setFormModal] = useState<FormModal>({buyer: "", phone: "", state: ""}); 
+  const [formModal, setFormModal] = useState<FormModal>({buyer: "", phone: "", state: "Sonora"}); 
   const [saving, setSaving] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
   const [form] = Form.useForm();
@@ -172,19 +171,16 @@ const HomeModal: FC<RafflesModalProps> = ({open, idsTicket, onClose}) => {
             </Form.Item>
           </Col>
           <Col xs={24} sm={24} md={12}>
-            <Form.Item
-              label="Estado"
-              name="state"
-              rules={[{ required: true, message: 'Favor de seleccioanr el Estado' }]}
-            >
-              <Select onChange={(value) => setFormModal({...formModal, state: value?.toString()})}>
-              {
-                states.map((state) => (
-                  <Option value={state} key={state}>{state}</Option>
-                ))                
-              }
-              </Select>
-            </Form.Item>
+            * Estado
+            <Select label="Estado" fullWidth value={formModal.state} onChange={(e) => {
+              setFormModal({...formModal, state: e.target.value as string })
+            }}>
+            {
+              states.map((state) => (
+                <MenuItem value={state} key={state}>{state}</MenuItem>
+              ))                
+            }
+            </Select>
           </Col>
         </Row>
       </Form>

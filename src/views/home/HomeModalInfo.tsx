@@ -10,6 +10,7 @@ interface PropsHomeModalInfo {
 }
 
 const HomeModalInfo: FC<PropsHomeModalInfo> = ({open, onClose, tickets = []}) => {
+  console.log(tickets);
   return (
     <Modal 
       visible={open}
@@ -40,6 +41,7 @@ const HomeModalInfo: FC<PropsHomeModalInfo> = ({open, onClose, tickets = []}) =>
             <Col sm={4} xs={4} md={2} key={ticket.id} style={{padding: 5}}>
               <div  
                 style={{ 
+                  width: 60,
                   height: 30,
                   cursor: "pointer", 
                   backgroundColor: ticket.status === "Libre" ? "green" : "red",
