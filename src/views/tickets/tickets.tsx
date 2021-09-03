@@ -2,7 +2,7 @@ import { FC, useEffect, useState } from 'react';
 import { AlignLeftOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { Button, Input, Row, Col, message } from 'antd';
 import firebase, { RootState } from '../../firebase/firebase';
-import { RaffleFirebase, TicketFirebase } from '../raffles/interfaces';
+import { RaffleFirebase, TicketFirebase } from '../Raffles/interfaces';
 import moment from 'moment';
 import { OrderByOptions, useFirestoreConnect, WhereOptions } from 'react-redux-firebase';
 import { useSelector } from 'react-redux';
@@ -92,7 +92,16 @@ const Tickets: FC<RouteComponentProps<MatchParams>> = ({match}) => {
   }
 
   const onScroll = (e: any) => {
-    const bottom = (e.target.scrollHeight - e.target.scrollTop) < (e.target.clientHeight + 1);
+    let bottom = false;
+    const  ua = navigator.userAgent.toLowerCase(); 
+
+    if (ua.indexOf('safari') != -1) { 
+      if (ua.indexOf('chrome') > -1) {
+        bottom = parseInt((e.target.scrollHeight - e.target.scrollTop).toString()) === e.target.clientHeight;
+      } else {
+        bottom = (e.target.scrollHeight - e.target.scrollTop) < (e.target.clientHeight + 2);
+      }
+    }
 
     if (bottom && limit < 5000) { 
       setLimit(limit + 50)
@@ -164,7 +173,7 @@ const Tickets: FC<RouteComponentProps<MatchParams>> = ({match}) => {
       />
       <br />
       <br />
-      <TableContainer component={Paper} style={{maxHeight: 500}} onScroll={onScroll}>
+      <TableContainer component={Paper} style={{overflowY: "auto", maxHeight: 450}} onScroll={onScroll}>
         <Table>
           <TableHead>
             <TableRow>

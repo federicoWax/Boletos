@@ -6,8 +6,8 @@ import { useAuth } from "../context/AuthContext";
 import Footer from '../components/Footer/Footer';
 import { Layout } from 'antd';
 import LayoutComponent from '../components/Layout/Layout';
-import Raffles from '../views/raffles/Raffles';
-import Tickets from '../views/tickets/Tickets';
+import Raffles from '../views/Raffles/Raffles';
+import Tickets from '../views/tickets/tickets';
 import Questions from '../views/questions/Questions';
 
 const privateRoutes: string[] = [
@@ -24,7 +24,7 @@ const Routes: FC = () => {
 
   return (
     <Router>
-      <Layout style={{ minHeight: '100vh', maxWidth: '100wh', overflow: "hidden"}}>
+      <Layout style={{ height: '100vh', maxWidth: '100wh', overflow: "hidden"}}>
           <LayoutComponent />
           <Layout className="site-layout">
             <Layout.Content>

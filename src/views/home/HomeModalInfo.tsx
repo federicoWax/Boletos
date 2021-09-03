@@ -1,7 +1,7 @@
 import { Col, Row } from 'antd';
 import Modal from 'antd/lib/modal/Modal';
 import { FC } from 'react';
-import { TicketFirebase } from '../raffles/interfaces';
+import { TicketFirebase } from '../Raffles/interfaces';
 
 interface PropsHomeModalInfo {
   open: boolean;

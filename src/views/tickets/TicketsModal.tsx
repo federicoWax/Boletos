@@ -4,7 +4,7 @@ import Modal from 'antd/lib/modal/Modal'
 import moment from 'moment';
 import { FC } from 'react'
 import logoLogin from '../../assets/login.jpg';
-import { TicketFirebase } from '../raffles/interfaces';
+import { TicketFirebase } from '../Raffles/interfaces';
 
 interface PropsTicketsModal {
   open: boolean;
